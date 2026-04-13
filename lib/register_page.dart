@@ -3,7 +3,6 @@ import 'package:http/http.dart' as http;
 
 import 'dart:convert';
 import 'login_page.dart';
-import 'email_verification_page.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -235,9 +234,6 @@ class _RegisterPageState extends State<RegisterPage> {
                                             final responseData = jsonDecode(
                                               response.body,
                                             );
-                                            final requiresVerification =
-                                                responseData['requiresVerification'] ??
-                                                false;
 
                                             if (responseData['registered'] ==
                                                 true) {
