@@ -17,6 +17,8 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/forum', forumRoutes);
 app.use('/api/users', usersRoutes);
 
+const PORT = process.env.PORT || 3000;
+
 mongoose.connect(process.env.MONGODB_URI)
-  .then(() => app.listen(3000, () => console.log('Servidor backend en puerto 3000')))
+  .then(() => app.listen(PORT, () => console.log(`Servidor backend en puerto ${PORT}`)))
   .catch(err => console.error('Error de conexión:', err));
