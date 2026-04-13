@@ -1,0 +1,203 @@
+const express = require('express');
+const router = express.Router();
+const ForumPost = require('../models/ForumPost');
+const User = require('../models/User');
+const auth = require('../middleware/auth');
+const { optionalAuth } = require('../middleware/auth');
+
+// Obtener todos los posts del foro
+router.get('/posts', optionalAuth, async (req, res) => {
+  try {
+    let posts = await ForumPost.find()
+      .populate('userId', 'username')
+      .sort({ createdAt: -1 });
+    
+    // Si hay autenticación, agregar flag de si el usuario actual ha likeado
+    if (req.userId) {
+      posts = posts.map(post => {
+        const postObj = post.toObject ? post.toObject() : post;
+        postObj.userHasLiked = post.likedBy.some(id => id.toString() === req.userId);
+        return postObj;
+      });
+    }
+    
+    res.json(posts);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener los posts del foro' });
+  }
+});
+
+// Obtener un post específico
+router.get('/posts/:id', async (req, res) => {
+  try {
+    const post = await ForumPost.findById(req.params.id)
+      .populate('userId', 'username')
+      .populate('comments.userId', 'username');
+    if (!post) return res.status(404).json({ error: 'Post no encontrado' });
+    res.json(post);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener el post' });
+  }
+});
+
+// Crear un nuevo post en el foro (requiere autenticación)
+router.post('/posts', auth, async (req, res) => {
+  try {
+    const postData = { ...req.body, userId: req.userId };
+    const post = new ForumPost(postData);
+    await post.save();
+    await post.populate('userId', 'username');
+    res.status(201).json(post);
+  } catch (err) {
+    console.error('Error al crear el post del foro:', err);
+    res.status(400).json({ error: 'Error al crear el post del foro', details: err.message });
+  }
+});
+
+// Actualizar un post
+router.put('/posts/:id', auth, async (req, res) => {
+  try {
+    const post = await ForumPost.findById(req.params.id);
+    if (!post) return res.status(404).json({ error: 'Post no encontrado' });
+    if (post.userId.toString() !== req.userId) return res.status(403).json({ error: 'No autorizado' });
+    const updatedPost = await ForumPost.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' });
+    res.json(updatedPost);
+  } catch (err) {
+    res.status(400).json({ error: 'Error al actualizar el post' });
+  }
+});
+
+// Eliminar un post
+router.delete('/posts/:id', auth, async (req, res) => {
+  try {
+    const post = await ForumPost.findById(req.params.id);
+    if (!post) return res.status(404).json({ error: 'Post no encontrado' });
+    if (post.userId.toString() !== req.userId) return res.status(403).json({ error: 'No autorizado' });
+    await ForumPost.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Post eliminado' });
+  } catch (err) {
+    res.status(400).json({ error: 'Error al eliminar el post' });
+  }
+});
+
+// Agregar un like a un post
+router.post('/posts/:id/like', auth, async (req, res) => {
+  try {
+    const post = await ForumPost.findById(req.params.id);
+    if (!post) return res.status(404).json({ error: 'Post no encontrado' });
+    
+    // Verificar si el usuario ya likeó el post
+    if (post.likedBy.includes(req.userId)) {
+      return res.status(400).json({ error: 'Ya likeaste este post' });
+    }
+
+    const updatedPost = await ForumPost.findByIdAndUpdate(
+      req.params.id,
+      { 
+        $inc: { likes: 1 },
+        $push: { likedBy: req.userId }
+      },
+      { returnDocument: 'after' }
+    );
+    res.json(updatedPost);
+  } catch (err) {
+    res.status(400).json({ error: 'Error al dar like al post' });
+  }
+});
+
+// Quitar un like de un post
+router.post('/posts/:id/unlike', auth, async (req, res) => {
+  try {
+    const post = await ForumPost.findById(req.params.id);
+    if (!post) return res.status(404).json({ error: 'Post no encontrado' });
+    
+    // Verificar si el usuario likeó el post
+    if (!post.likedBy.includes(req.userId)) {
+      return res.status(400).json({ error: 'No has likeado este post' });
+    }
+
+    const updatedPost = await ForumPost.findByIdAndUpdate(
+      req.params.id,
+      { 
+        $inc: { likes: -1 },
+        $pull: { likedBy: req.userId }
+      },
+      { returnDocument: 'after' }
+    );
+    res.json(updatedPost);
+  } catch (err) {
+    res.status(400).json({ error: 'Error al quitar like del post' });
+  }
+});
+
+// Agregar un comentario a un post
+router.post('/posts/:id/comment', auth, async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text) return res.status(400).json({ error: 'El comentario no puede estar vacío' });
+
+    const user = await User.findById(req.userId);
+    const comment = {
+      userId: req.userId,
+      username: user.username,
+      text,
+    };
+
+    const post = await ForumPost.findByIdAndUpdate(
+      req.params.id,
+      { $push: { comments: comment } },
+      { returnDocument: 'after' }
+    );
+    if (!post) return res.status(404).json({ error: 'Post no encontrado' });
+    res.json(post);
+  } catch (err) {
+    res.status(400).json({ error: 'Error al agregar comentario' });
+  }
+});
+
+// Editar un comentario en un post
+router.put('/posts/:postId/comments/:commentId', auth, async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text) return res.status(400).json({ error: 'El comentario no puede estar vacío' });
+
+    const post = await ForumPost.findById(req.params.postId);
+    if (!post) return res.status(404).json({ error: 'Post no encontrado' });
+
+    const comment = post.comments.id(req.params.commentId);
+    if (!comment) return res.status(404).json({ error: 'Comentario no encontrado' });
+
+    if (comment.userId.toString() !== req.userId) {
+      return res.status(403).json({ error: 'No autorizado para editar este comentario' });
+    }
+
+    comment.text = text;
+    await post.save();
+    res.json(post);
+  } catch (err) {
+    res.status(400).json({ error: 'Error al editar comentario' });
+  }
+});
+
+// Eliminar un comentario de un post
+router.delete('/posts/:postId/comments/:commentId', auth, async (req, res) => {
+  try {
+    const post = await ForumPost.findById(req.params.postId);
+    if (!post) return res.status(404).json({ error: 'Post no encontrado' });
+
+    const comment = post.comments.id(req.params.commentId);
+    if (!comment) return res.status(404).json({ error: 'Comentario no encontrado' });
+
+    if (comment.userId.toString() !== req.userId) {
+      return res.status(403).json({ error: 'No autorizado para eliminar este comentario' });
+    }
+
+    post.comments.id(req.params.commentId).deleteOne();
+    await post.save();
+    res.json(post);
+  } catch (err) {
+    res.status(400).json({ error: 'Error al eliminar comentario' });
+  }
+});
+
+module.exports = router;
