@@ -86,7 +86,7 @@ class _UsersPageState extends State<UsersPage> with TickerProviderStateMixin {
     });
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:3000/api/users'),
+        Uri.parse('https://starry-1zm8.onrender.com/api/users'),
         headers: {'Content-Type': 'application/json'},
       );
 

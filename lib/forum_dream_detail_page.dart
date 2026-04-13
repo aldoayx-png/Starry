@@ -77,7 +77,7 @@ class _ForumDreamDetailPageState extends State<ForumDreamDetailPage>
       final token = await TokenStorage.getToken();
       final response = await http.post(
         Uri.parse(
-          'http://localhost:3000/api/forum/posts/${widget.dream.id}/comment',
+          'https://starry-1zm8.onrender.com/api/forum/posts/${widget.dream.id}/comment',
         ),
         headers: {
           'Authorization': 'Bearer $token',
@@ -185,7 +185,7 @@ class _ForumDreamDetailPageState extends State<ForumDreamDetailPage>
         final token = await TokenStorage.getToken();
         final response = await http.put(
           Uri.parse(
-            'http://localhost:3000/api/forum/posts/${widget.dream.id}/comments/${comment.id}',
+            'https://starry-1zm8.onrender.com/api/forum/posts/${widget.dream.id}/comments/${comment.id}',
           ),
           headers: {
             'Authorization': 'Bearer $token',
@@ -262,7 +262,7 @@ class _ForumDreamDetailPageState extends State<ForumDreamDetailPage>
         final token = await TokenStorage.getToken();
         final response = await http.delete(
           Uri.parse(
-            'http://localhost:3000/api/forum/posts/${widget.dream.id}/comments/${comment.id}',
+            'https://starry-1zm8.onrender.com/api/forum/posts/${widget.dream.id}/comments/${comment.id}',
           ),
           headers: {
             'Authorization': 'Bearer $token',

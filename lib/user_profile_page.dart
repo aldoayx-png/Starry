@@ -80,7 +80,7 @@ class _UserProfilePageState extends State<UserProfilePage>
     });
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:3000/api/forum/posts'),
+        Uri.parse('https://starry-1zm8.onrender.com/api/forum/posts'),
         headers: {
           'Content-Type': 'application/json',
           if (token != null) 'Authorization': 'Bearer $token',
@@ -126,7 +126,9 @@ class _UserProfilePageState extends State<UserProfilePage>
   Future<void> _fetchUserEmail() async {
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:3000/api/users/${widget.userId}'),
+        Uri.parse(
+          'https://starry-1zm8.onrender.com/api/users/${widget.userId}',
+        ),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -153,7 +155,7 @@ class _UserProfilePageState extends State<UserProfilePage>
           : '/api/forum/posts/$postId/like';
 
       final response = await http.post(
-        Uri.parse('http://localhost:3000$endpoint'),
+        Uri.parse('https://starry-1zm8.onrender.com$endpoint'),
         headers: {
           'Content-Type': 'application/json',
           if (token != null) 'Authorization': 'Bearer $token',

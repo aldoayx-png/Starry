@@ -78,7 +78,7 @@ class _CalendarPageState extends State<CalendarPage>
     try {
       final token = await TokenStorage.getToken();
       final response = await http.get(
-        Uri.parse('http://localhost:3000/api/dreams'),
+        Uri.parse('https://starry-1zm8.onrender.com/api/dreams'),
         headers: {
           'Content-Type': 'application/json',
           if (token != null) 'Authorization': 'Bearer $token',

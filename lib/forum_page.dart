@@ -51,7 +51,7 @@ class _ForumPageState extends State<ForumPage> with TickerProviderStateMixin {
     try {
       final token = await TokenStorage.getToken();
       final response = await http.get(
-        Uri.parse('http://localhost:3000/api/profile'),
+        Uri.parse('https://starry-1zm8.onrender.com/api/profile'),
         headers: {
           'Content-Type': 'application/json',
           if (token != null) 'Authorization': 'Bearer $token',
@@ -98,7 +98,7 @@ class _ForumPageState extends State<ForumPage> with TickerProviderStateMixin {
     try {
       final token = await TokenStorage.getToken();
       final response = await http.get(
-        Uri.parse('http://localhost:3000/api/forum/posts'),
+        Uri.parse('https://starry-1zm8.onrender.com/api/forum/posts'),
         headers: {
           'Content-Type': 'application/json',
           if (token != null) 'Authorization': 'Bearer $token',
@@ -142,7 +142,9 @@ class _ForumPageState extends State<ForumPage> with TickerProviderStateMixin {
       final token = await TokenStorage.getToken();
       final endpoint = isLiked ? 'unlike' : 'like';
       final response = await http.post(
-        Uri.parse('http://localhost:3000/api/forum/posts/$postId/$endpoint'),
+        Uri.parse(
+          'https://starry-1zm8.onrender.com/api/forum/posts/$postId/$endpoint',
+        ),
         headers: {
           'Content-Type': 'application/json',
           if (token != null) 'Authorization': 'Bearer $token',

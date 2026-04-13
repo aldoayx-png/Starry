@@ -105,7 +105,7 @@ class _DreamDetailPageState extends State<DreamDetailPage>
                     final token = await TokenStorage.getToken();
                     final response = await http.put(
                       Uri.parse(
-                        'http://localhost:3000/api/dreams/${widget.dream.id}',
+                        'https://starry-1zm8.onrender.com/api/dreams/${widget.dream.id}',
                       ),
                       headers: {
                         'Content-Type': 'application/json',
@@ -198,7 +198,7 @@ class _DreamDetailPageState extends State<DreamDetailPage>
                     final token = await TokenStorage.getToken();
                     final response = await http.delete(
                       Uri.parse(
-                        'http://localhost:3000/api/dreams/${widget.dream.id}',
+                        'https://starry-1zm8.onrender.com/api/dreams/${widget.dream.id}',
                       ),
                       headers: {
                         'Content-Type': 'application/json',

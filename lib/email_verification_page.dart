@@ -42,7 +42,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://localhost:3000/api/verify-code'),
+        Uri.parse('https://starry-1zm8.onrender.com/api/verify-code'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': widget.email, 'code': _codeController.text}),
       );
@@ -96,7 +96,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://localhost:3000/api/resend-verification'),
+        Uri.parse('https://starry-1zm8.onrender.com/api/resend-verification'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': widget.email}),
       );

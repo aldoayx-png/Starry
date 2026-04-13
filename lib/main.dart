@@ -143,7 +143,7 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
     try {
       final token = await TokenStorage.getToken();
       final response = await http.get(
-        Uri.parse('http://localhost:3000/api/profile'),
+        Uri.parse('https://starry-1zm8.onrender.com/api/profile'),
         headers: {
           'Content-Type': 'application/json',
           if (token != null) 'Authorization': 'Bearer $token',
@@ -164,7 +164,7 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
     try {
       final token = await TokenStorage.getToken();
       final response = await http.get(
-        Uri.parse('http://localhost:3000/api/dreams'),
+        Uri.parse('https://starry-1zm8.onrender.com/api/dreams'),
         headers: {
           'Content-Type': 'application/json',
           if (token != null) 'Authorization': 'Bearer $token',
@@ -578,7 +578,9 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                       onSave: (dream) async {
                         final token = await TokenStorage.getToken();
                         final response = await http.post(
-                          Uri.parse('http://localhost:3000/api/dreams'),
+                          Uri.parse(
+                            'https://starry-1zm8.onrender.com/api/dreams',
+                          ),
                           headers: {
                             'Content-Type': 'application/json',
                             if (token != null) 'Authorization': 'Bearer $token',
@@ -603,7 +605,7 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                           if (dream.isShared) {
                             await http.post(
                               Uri.parse(
-                                'http://localhost:3000/api/forum/posts',
+                                'https://starry-1zm8.onrender.com/api/forum/posts',
                               ),
                               headers: {
                                 'Content-Type': 'application/json',

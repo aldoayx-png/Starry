@@ -219,7 +219,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                       try {
                                         response = await http.post(
                                           Uri.parse(
-                                            'http://localhost:3000/api/register',
+                                            'https://starry-1zm8.onrender.com/api/register',
                                           ),
                                           headers: {
                                             'Content-Type': 'application/json',

@@ -55,7 +55,7 @@ class _ProfilePageState extends State<ProfilePage>
     final token = await TokenStorage.getToken();
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:3000/api/profile'),
+        Uri.parse('https://starry-1zm8.onrender.com/api/profile'),
         headers: {
           'Content-Type': 'application/json',
           if (token != null) 'Authorization': 'Bearer $token',
@@ -66,7 +66,7 @@ class _ProfilePageState extends State<ProfilePage>
 
         // Obtener estadísticas
         final statsResponse = await http.get(
-          Uri.parse('http://localhost:3000/api/profile/stats'),
+          Uri.parse('https://starry-1zm8.onrender.com/api/profile/stats'),
           headers: {
             'Content-Type': 'application/json',
             if (token != null) 'Authorization': 'Bearer $token',
@@ -132,7 +132,7 @@ class _ProfilePageState extends State<ProfilePage>
     final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:3000/api/dreams'),
+        Uri.parse('https://starry-1zm8.onrender.com/api/dreams'),
         headers: {
           'Content-Type': 'application/json',
           if (token != null) 'Authorization': 'Bearer $token',

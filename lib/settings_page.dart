@@ -73,7 +73,7 @@ class _SettingsPageState extends State<SettingsPage>
     try {
       final token = await TokenStorage.getToken();
       final response = await http.get(
-        Uri.parse('http://localhost:3000/api/profile'),
+        Uri.parse('https://starry-1zm8.onrender.com/api/profile'),
         headers: {
           'Content-Type': 'application/json',
           if (token != null) 'Authorization': 'Bearer $token',
@@ -359,7 +359,9 @@ class _SettingsPageState extends State<SettingsPage>
                             return;
                           }
                           final response = await http.put(
-                            Uri.parse('http://localhost:3000/api/profile'),
+                            Uri.parse(
+                              'https://starry-1zm8.onrender.com/api/profile',
+                            ),
                             headers: {
                               'Content-Type': 'application/json',
                               'Authorization': 'Bearer $token',
@@ -612,7 +614,7 @@ class _SettingsPageState extends State<SettingsPage>
                                 final token = await TokenStorage.getToken();
                                 final response = await http.post(
                                   Uri.parse(
-                                    'http://localhost:3000/api/profile/verify-password-change-code',
+                                    'https://starry-1zm8.onrender.com/api/profile/verify-password-change-code',
                                   ),
                                   headers: {
                                     'Content-Type': 'application/json',
@@ -707,7 +709,7 @@ class _SettingsPageState extends State<SettingsPage>
       final token = await TokenStorage.getToken();
       await http.post(
         Uri.parse(
-          'http://localhost:3000/api/profile/send-password-change-code',
+          'https://starry-1zm8.onrender.com/api/profile/send-password-change-code',
         ),
         headers: {
           'Content-Type': 'application/json',
@@ -957,7 +959,7 @@ class _SettingsPageState extends State<SettingsPage>
                           final token = await TokenStorage.getToken();
                           final response = await http.put(
                             Uri.parse(
-                              'http://localhost:3000/api/profile/change-password',
+                              'https://starry-1zm8.onrender.com/api/profile/change-password',
                             ),
                             headers: {
                               'Content-Type': 'application/json',
@@ -1209,7 +1211,7 @@ class _SettingsPageState extends State<SettingsPage>
                                 final token = await TokenStorage.getToken();
                                 final response = await http.post(
                                   Uri.parse(
-                                    'http://localhost:3000/api/profile/verify-delete-account-code',
+                                    'https://starry-1zm8.onrender.com/api/profile/verify-delete-account-code',
                                   ),
                                   headers: {
                                     'Content-Type': 'application/json',
@@ -1303,7 +1305,9 @@ class _SettingsPageState extends State<SettingsPage>
     try {
       final token = await TokenStorage.getToken();
       await http.post(
-        Uri.parse('http://localhost:3000/api/profile/send-delete-account-code'),
+        Uri.parse(
+          'https://starry-1zm8.onrender.com/api/profile/send-delete-account-code',
+        ),
         headers: {
           'Content-Type': 'application/json',
           if (token != null) 'Authorization': 'Bearer $token',
@@ -1476,7 +1480,9 @@ class _SettingsPageState extends State<SettingsPage>
                         try {
                           final token = await TokenStorage.getToken();
                           final response = await http.delete(
-                            Uri.parse('http://localhost:3000/api/profile'),
+                            Uri.parse(
+                              'https://starry-1zm8.onrender.com/api/profile',
+                            ),
                             headers: {
                               'Content-Type': 'application/json',
                               if (token != null)
