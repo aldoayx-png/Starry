@@ -52,40 +52,19 @@ router.post('/register', async (req, res) => {
     if (await User.findOne({ email })) return res.status(400).json({ error: 'Email ya registrado' });
     if (await User.findOne({ username })) return res.status(400).json({ error: 'Nombre de usuario ya registrado' });
     
-    // Verificar que no haya un registro de verificación pendiente con ese email
-    const existingRecord = await VerificationToken.findOne({ email });
-    if (existingRecord) {
-      await VerificationToken.deleteOne({ _id: existingRecord._id });
-    }
-    
-    // Generar código de verificación
-    const verificationCode = generateVerificationCode();
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutos
-    
-    // Guardar los datos temporalmente (NO crear usuario aún)
-    const tokenRecord = new VerificationToken({
+    // Crear usuario directamente
+    const user = new User({
       email,
       password,
       username,
-      code: verificationCode,
-      expiresAt
+      emailVerified: true
     });
-    await tokenRecord.save();
     
-    // Enviar email de verificación
-    try {
-      await sendVerificationEmail(email, verificationCode, username);
-    } catch (emailError) {
-      console.error('Error al enviar email:', emailError);
-      await VerificationToken.deleteOne({ code: verificationCode });
-      return res.status(500).json({ 
-        error: 'No se pudo enviar el email de verificación. Intenta más tarde.'
-      });
-    }
+    await user.save();
     
     res.status(201).json({ 
-      message: 'Se envió un código de verificación a tu correo. Introdúcelo en la app para completar el registro.',
-      requiresVerification: true
+      message: 'Cuenta creada correctamente. Ahora puedes iniciar sesión.',
+      registered: true
     });
   } catch (err) {
     console.error(err);
@@ -179,11 +158,6 @@ router.post('/login', async (req, res) => {
     const user = await User.findOne({ email });
     if (!user || !(await bcrypt.compare(password, user.password)))
       return res.status(400).json({ error: 'Credenciales incorrectas' });
-    
-    // Verificar si el email está verificado
-    if (!user.emailVerified) {
-      return res.status(403).json({ error: 'Por favor verifica tu email antes de iniciar sesión', requiresVerification: true });
-    }
     
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
     res.json({ token, userId: user._id });

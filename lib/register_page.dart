@@ -239,9 +239,22 @@ class _RegisterPageState extends State<RegisterPage> {
                                                 responseData['requiresVerification'] ??
                                                 false;
 
-                                            if (requiresVerification) {
+                                            if (responseData['registered'] ==
+                                                true) {
                                               setState(() => isLoading = false);
                                               if (mounted) {
+                                                ScaffoldMessenger.of(
+                                                  context,
+                                                ).showSnackBar(
+                                                  const SnackBar(
+                                                    content: Text(
+                                                      'Cuenta creada correctamente. Inicia sesión.',
+                                                    ),
+                                                    backgroundColor: Color(
+                                                      0xFF8e2de2,
+                                                    ),
+                                                  ),
+                                                );
                                                 Navigator.of(
                                                   context,
                                                 ).pushReplacement(
@@ -251,10 +264,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                                           context,
                                                           animation,
                                                           secondaryAnimation,
-                                                        ) =>
-                                                            EmailVerificationPage(
-                                                              email: email!,
-                                                            ),
+                                                        ) => LoginPage(),
                                                     transitionsBuilder:
                                                         (
                                                           context,

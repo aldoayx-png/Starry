@@ -444,8 +444,7 @@ class _SettingsPageState extends State<SettingsPage>
   }
 
   Future<void> _changePassword() async {
-    // Primero mostrar diálogo de verificación
-    _showPasswordVerificationDialog();
+    _showChangePasswordDialog();
   }
 
   Future<void> _showPasswordVerificationDialog() async {
@@ -1041,8 +1040,7 @@ class _SettingsPageState extends State<SettingsPage>
   }
 
   Future<void> _deleteAccount() async {
-    // Primero mostrar diálogo de verificación
-    _showDeleteAccountVerificationDialog();
+    _showConfirmDeleteAccountDialog();
   }
 
   Future<void> _showDeleteAccountVerificationDialog() async {
