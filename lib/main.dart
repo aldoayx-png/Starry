@@ -1036,192 +1036,651 @@ class _DreamFormDialogState extends State<DreamFormDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Registrar sueño'),
-      content: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                decoration: const InputDecoration(labelText: 'Título'),
-                initialValue: title ?? '',
-                onSaved: (value) => title = value,
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Ingrese un título' : null,
-              ),
-              const SizedBox(height: 8),
-              Row(
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF000000), Color(0xFF1a1a1a)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Color(0xFF8e2de2), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: Color(0xFF8e2de2).withValues(alpha: 0.3),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Row(
                 children: [
-                  Expanded(
-                    child: Text(
-                      date == null
-                          ? 'Fecha: No seleccionada'
-                          : 'Fecha: ${date!.toLocal().toString().split(' ')[0]}',
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Color(0xFF8e2de2).withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.bedtime,
+                      color: Colors.white,
+                      size: 24,
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.calendar_today),
-                    onPressed: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: DateTime.now(),
-                        firstDate: DateTime(2000),
-                        lastDate: DateTime(2100),
-                      );
-                      if (picked != null) {
-                        setState(() {
-                          date = picked;
-                        });
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'Registrar sueño',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Flexible(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Título',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: 'Título del sueño',
+                            hintStyle: const TextStyle(color: Colors.white54),
+                            prefixIcon: const Icon(
+                              Icons.edit,
+                              color: Color(0xFF8e2de2),
+                              size: 20,
+                            ),
+                            filled: true,
+                            fillColor: Color.fromRGBO(255, 255, 255, 0.08),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: const BorderSide(
+                                color: Color(0xFF8e2de2),
+                                width: 1.5,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: const BorderSide(
+                                color: Color(0xFF8e2de2),
+                                width: 2,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 16,
+                              horizontal: 16,
+                            ),
+                          ),
+                          initialValue: title ?? '',
+                          onSaved: (value) => title = value,
+                          validator: (value) => value == null || value.isEmpty
+                              ? 'Ingrese un título'
+                              : null,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Fecha',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        GestureDetector(
+                          onTap: () async {
+                            final picked = await showDatePicker(
+                              context: context,
+                              initialDate: date ?? DateTime.now(),
+                              firstDate: DateTime(2000),
+                              lastDate: DateTime(2100),
+                            );
+                            if (picked != null) {
+                              setState(() {
+                                date = picked;
+                              });
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 16,
+                              horizontal: 16,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Color.fromRGBO(255, 255, 255, 0.08),
+                              border: Border.all(
+                                color: Color(0xFF8e2de2),
+                                width: 1.5,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.calendar_today,
+                                  color: Color(0xFF8e2de2),
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    date == null
+                                        ? 'Seleccionar fecha'
+                                        : date!.toLocal().toString().split(
+                                            ' ',
+                                          )[0],
+                                    style: TextStyle(
+                                      color: date == null
+                                          ? Colors.white54
+                                          : Colors.white,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Estado de ánimo',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        DropdownButtonFormField<String>(
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                          dropdownColor: const Color(0xFF1a1a1a),
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Color.fromRGBO(255, 255, 255, 0.08),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: const BorderSide(
+                                color: Color(0xFF8e2de2),
+                                width: 1.5,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: const BorderSide(
+                                color: Color(0xFF8e2de2),
+                                width: 2,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 16,
+                              horizontal: 16,
+                            ),
+                            prefixIcon: const Icon(
+                              Icons.mood,
+                              color: Color(0xFF8e2de2),
+                              size: 20,
+                            ),
+                          ),
+                          value: mood,
+                          items: moods
+                              .map(
+                                (m) =>
+                                    DropdownMenuItem(value: m, child: Text(m)),
+                              )
+                              .toList(),
+                          onChanged: (value) => setState(() => mood = value),
+                          validator: (value) => value == null
+                              ? 'Seleccione un estado de ánimo'
+                              : null,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Etiquetas',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Color.fromRGBO(255, 255, 255, 0.08),
+                            border: Border.all(
+                              color: Color(0xFF8e2de2),
+                              width: 1.5,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Wrap(
+                            spacing: 8.0,
+                            runSpacing: 8.0,
+                            children: tagOptions.map((tag) {
+                              final selected = tags.contains(tag);
+                              return FilterChip(
+                                label: Text(tag),
+                                selected: selected,
+                                selectedColor: Color(
+                                  0xFF8e2de2,
+                                ).withValues(alpha: 0.3),
+                                side: BorderSide(
+                                  color: selected
+                                      ? Color(0xFF8e2de2)
+                                      : Colors.white30,
+                                  width: 1.5,
+                                ),
+                                labelStyle: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: selected
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                ),
+                                backgroundColor: Color.fromRGBO(
+                                  255,
+                                  255,
+                                  255,
+                                  0.05,
+                                ),
+                                onSelected: (bool value) {
+                                  setState(() {
+                                    if (value) {
+                                      tags.add(tag);
+                                    } else {
+                                      tags.remove(tag);
+                                    }
+                                  });
+                                },
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Personas/Personajes',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: 'Personas o personajes presentes',
+                            hintStyle: const TextStyle(color: Colors.white54),
+                            prefixIcon: const Icon(
+                              Icons.people,
+                              color: Color(0xFF8e2de2),
+                              size: 20,
+                            ),
+                            filled: true,
+                            fillColor: Color.fromRGBO(255, 255, 255, 0.08),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: const BorderSide(
+                                color: Color(0xFF8e2de2),
+                                width: 1.5,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: const BorderSide(
+                                color: Color(0xFF8e2de2),
+                                width: 2,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 16,
+                              horizontal: 16,
+                            ),
+                          ),
+                          initialValue: people ?? '',
+                          onSaved: (value) => people = value,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Lugar/Ambiente',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: 'Lugar o ambiente del sueño',
+                            hintStyle: const TextStyle(color: Colors.white54),
+                            prefixIcon: const Icon(
+                              Icons.location_on,
+                              color: Color(0xFF8e2de2),
+                              size: 20,
+                            ),
+                            filled: true,
+                            fillColor: Color.fromRGBO(255, 255, 255, 0.08),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: const BorderSide(
+                                color: Color(0xFF8e2de2),
+                                width: 1.5,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: const BorderSide(
+                                color: Color(0xFF8e2de2),
+                                width: 2,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 16,
+                              horizontal: 16,
+                            ),
+                          ),
+                          initialValue: place ?? '',
+                          onSaved: (value) => place = value,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Claridad/Realismo: ${clarity.round()}',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Slider(
+                          value: clarity,
+                          min: 1,
+                          max: 10,
+                          divisions: 9,
+                          label: clarity.round().toString(),
+                          activeColor: Color(0xFF8e2de2),
+                          inactiveColor: Colors.white24,
+                          onChanged: (value) {
+                            setState(() {
+                              clarity = value;
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Notas/Interpretación',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                          maxLines: 3,
+                          decoration: InputDecoration(
+                            hintText: 'Tu interpretación personal del sueño',
+                            hintStyle: const TextStyle(color: Colors.white54),
+                            filled: true,
+                            fillColor: Color.fromRGBO(255, 255, 255, 0.08),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: const BorderSide(
+                                color: Color(0xFF8e2de2),
+                                width: 1.5,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: const BorderSide(
+                                color: Color(0xFF8e2de2),
+                                width: 2,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 16,
+                              horizontal: 16,
+                            ),
+                          ),
+                          initialValue: notes ?? '',
+                          onSaved: (value) => notes = value,
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Color(0xFF8e2de2).withValues(alpha: 0.1),
+                            border: Border.all(
+                              color: Color(0xFF8e2de2),
+                              width: 1.5,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            children: [
+                              CheckboxListTile(
+                                title: const Text(
+                                  '¿Se repitió el sueño?',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                                value: isRecurring,
+                                activeColor: Color(0xFF8e2de2),
+                                checkColor: Colors.white,
+                                onChanged: (value) => setState(
+                                  () => isRecurring = value ?? false,
+                                ),
+                                controlAffinity:
+                                    ListTileControlAffinity.leading,
+                              ),
+                              CheckboxListTile(
+                                title: const Text(
+                                  '¿Despertaste durante el sueño?',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                                value: wokeUp,
+                                activeColor: Color(0xFF8e2de2),
+                                checkColor: Colors.white,
+                                onChanged: (value) =>
+                                    setState(() => wokeUp = value ?? false),
+                                controlAffinity:
+                                    ListTileControlAffinity.leading,
+                              ),
+                              CheckboxListTile(
+                                title: const Text(
+                                  'Compartir en el foro de sueños',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                                value: isShared,
+                                activeColor: Color(0xFF8e2de2),
+                                checkColor: Colors.white,
+                                onChanged: (value) =>
+                                    setState(() => isShared = value ?? false),
+                                controlAffinity:
+                                    ListTileControlAffinity.leading,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Información del sueño',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                          maxLines: 3,
+                          decoration: InputDecoration(
+                            hintText: 'Describe tu sueño en detalle',
+                            hintStyle: const TextStyle(color: Colors.white54),
+                            filled: true,
+                            fillColor: Color.fromRGBO(255, 255, 255, 0.08),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: const BorderSide(
+                                color: Color(0xFF8e2de2),
+                                width: 1.5,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: const BorderSide(
+                                color: Color(0xFF8e2de2),
+                                width: 2,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 16,
+                              horizontal: 16,
+                            ),
+                          ),
+                          initialValue: dreamInfo ?? '',
+                          onSaved: (value) => dreamInfo = value,
+                          validator: (value) => value == null || value.isEmpty
+                              ? 'Ingrese la información del sueño'
+                              : null,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
+                    ),
+                    child: const Text(
+                      'Cancelar',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        _formKey.currentState!.save();
+                        final dream = Dream(
+                          title: title,
+                          date: date,
+                          mood: mood,
+                          tags: List.from(tags),
+                          people: people,
+                          place: place,
+                          clarity: clarity,
+                          notes: notes,
+                          isRecurring: isRecurring,
+                          wokeUp: wokeUp,
+                          dreamInfo: dreamInfo,
+                          isShared: isShared,
+                        );
+                        widget.onSave?.call(dream);
+                        Navigator.of(context).pop();
                       }
                     },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              DropdownButtonFormField<String>(
-                decoration: const InputDecoration(labelText: 'Estado de ánimo'),
-                value: mood,
-                items: moods
-                    .map((m) => DropdownMenuItem(value: m, child: Text(m)))
-                    .toList(),
-                onChanged: (value) => setState(() => mood = value),
-                validator: (value) =>
-                    value == null ? 'Seleccione un estado de ánimo' : null,
-              ),
-              const SizedBox(height: 8),
-              InputDecorator(
-                decoration: const InputDecoration(labelText: 'Etiquetas'),
-                child: Wrap(
-                  spacing: 4.0,
-                  children: tagOptions.map((tag) {
-                    final selected = tags.contains(tag);
-                    return FilterChip(
-                      label: Text(tag),
-                      selected: selected,
-                      onSelected: (bool value) {
-                        setState(() {
-                          if (value) {
-                            tags.add(tag);
-                          } else {
-                            tags.remove(tag);
-                          }
-                        });
-                      },
-                    );
-                  }).toList(),
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                decoration: const InputDecoration(
-                  labelText: 'Personas/Personajes presentes',
-                ),
-                initialValue: people ?? '',
-                onSaved: (value) => people = value,
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                decoration: const InputDecoration(labelText: 'Lugar/Ambiente'),
-                initialValue: place ?? '',
-                onSaved: (value) => place = value,
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Text('Claridad/Realismo:'),
-                  Expanded(
-                    child: Slider(
-                      value: clarity,
-                      min: 1,
-                      max: 10,
-                      divisions: 9,
-                      label: clarity.round().toString(),
-                      onChanged: (value) {
-                        setState(() {
-                          clarity = value;
-                        });
-                      },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF8e2de2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      'Guardar sueño',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
-              TextFormField(
-                decoration: const InputDecoration(
-                  labelText: 'Notas/Interpretación personal',
-                ),
-                maxLines: 3,
-                initialValue: notes ?? '',
-                onSaved: (value) => notes = value,
-              ),
-              const SizedBox(height: 8),
-              CheckboxListTile(
-                title: const Text('¿Se repitió el sueño?'),
-                value: isRecurring,
-                onChanged: (value) =>
-                    setState(() => isRecurring = value ?? false),
-                controlAffinity: ListTileControlAffinity.leading,
-              ),
-              CheckboxListTile(
-                title: const Text('¿Despertaste durante el sueño?'),
-                value: wokeUp,
-                onChanged: (value) => setState(() => wokeUp = value ?? false),
-                controlAffinity: ListTileControlAffinity.leading,
-              ),
-              CheckboxListTile(
-                title: const Text('Compartir en el foro de sueños'),
-                value: isShared,
-                onChanged: (value) => setState(() => isShared = value ?? false),
-                controlAffinity: ListTileControlAffinity.leading,
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                decoration: const InputDecoration(
-                  labelText: 'Información del sueño',
-                ),
-                maxLines: 3,
-                initialValue: dreamInfo ?? '',
-                onSaved: (value) => dreamInfo = value,
-                validator: (value) => value == null || value.isEmpty
-                    ? 'Ingrese la información del sueño'
-                    : null,
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancelar'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            if (_formKey.currentState!.validate()) {
-              _formKey.currentState!.save();
-              final dream = Dream(
-                title: title,
-                date: date,
-                mood: mood,
-                tags: List.from(tags),
-                people: people,
-                place: place,
-                clarity: clarity,
-                notes: notes,
-                isRecurring: isRecurring,
-                wokeUp: wokeUp,
-                dreamInfo: dreamInfo,
-                isShared: isShared,
-              );
-              widget.onSave?.call(dream);
-              // El Navigator.pop se maneja en el onSave del padre
-            }
-          },
-          child: const Text('Guardar'),
-        ),
-      ],
     );
   }
 }
