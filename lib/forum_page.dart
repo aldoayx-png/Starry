@@ -415,7 +415,7 @@ class _ForumPageState extends State<ForumPage> with TickerProviderStateMixin {
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 8),
                 if (_isLoading)
                   const Padding(
                     padding: EdgeInsets.all(24.0),
@@ -459,7 +459,7 @@ class _ForumPageState extends State<ForumPage> with TickerProviderStateMixin {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     padding: const EdgeInsets.only(
-                      top: 32,
+                      top: 8,
                       left: 16,
                       right: 16,
                       bottom: 16,
