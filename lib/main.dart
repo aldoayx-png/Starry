@@ -1034,12 +1034,54 @@ class _DreamFormDialogState extends State<DreamFormDialog> {
     'Largo',
   ];
 
+  IconData _getTagIcon(String tag) {
+    switch (tag) {
+      case 'Lúcido':
+        return Icons.lightbulb;
+      case 'Pesadilla':
+        return Icons.warning;
+      case 'Recurrente':
+        return Icons.repeat;
+      case 'Normal':
+        return Icons.nightlight_round;
+      case 'Colorido':
+        return Icons.palette;
+      case 'Corto':
+        return Icons.timer;
+      case 'Largo':
+        return Icons.hourglass_bottom;
+      default:
+        return Icons.label;
+    }
+  }
+
+  IconData _getMoodIcon(String moodType) {
+    switch (moodType) {
+      case 'Feliz':
+        return Icons.emoji_emotions;
+      case 'Triste':
+        return Icons.sentiment_dissatisfied;
+      case 'Ansioso':
+        return Icons.sentiment_neutral;
+      case 'Asustado':
+        return Icons.sentiment_very_dissatisfied;
+      case 'Neutral':
+        return Icons.sentiment_satisfied;
+      default:
+        return Icons.mood;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
       backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
       child: Container(
+        constraints: BoxConstraints(
+          maxWidth: 500,
+          maxHeight: MediaQuery.of(context).size.height * 0.8,
+        ),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             colors: [Color(0xFF000000), Color(0xFF1a1a1a)],
@@ -1061,7 +1103,7 @@ class _DreamFormDialogState extends State<DreamFormDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(20),
               child: Row(
                 children: [
                   Container(
@@ -1095,7 +1137,7 @@ class _DreamFormDialogState extends State<DreamFormDialog> {
             Flexible(
               child: SingleChildScrollView(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Form(
                     key: _formKey,
                     child: Column(
@@ -1225,50 +1267,101 @@ class _DreamFormDialogState extends State<DreamFormDialog> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        DropdownButtonFormField<String>(
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
-                          dropdownColor: const Color(0xFF1a1a1a),
-                          decoration: InputDecoration(
-                            filled: true,
-                            fillColor: Color.fromRGBO(255, 255, 255, 0.08),
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                color: Color(0xFF8e2de2),
-                                width: 1.5,
+                        Wrap(
+                          spacing: 8.0,
+                          runSpacing: 8.0,
+                          children: moods.map((moodOption) {
+                            final selected = mood == moodOption;
+                            return GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  mood = moodOption;
+                                });
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeOutCubic,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  gradient: selected
+                                      ? LinearGradient(
+                                          colors: [
+                                            Color(0xFF8e2de2),
+                                            Color(0xFF6c5ce7),
+                                          ],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                        )
+                                      : LinearGradient(
+                                          colors: [
+                                            Colors.white.withValues(
+                                              alpha: 0.15,
+                                            ),
+                                            Colors.white.withValues(
+                                              alpha: 0.05,
+                                            ),
+                                          ],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                        ),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: selected
+                                        ? Color(0xFF8e2de2)
+                                        : Colors.white.withValues(alpha: 0.2),
+                                    width: selected ? 2 : 1.5,
+                                  ),
+                                  boxShadow: selected
+                                      ? [
+                                          BoxShadow(
+                                            color: Color(
+                                              0xFF8e2de2,
+                                            ).withValues(alpha: 0.4),
+                                            blurRadius: 12,
+                                            spreadRadius: 0,
+                                          ),
+                                        ]
+                                      : null,
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      _getMoodIcon(moodOption),
+                                      color: Colors.white,
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      moodOption,
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: selected
+                                            ? FontWeight.bold
+                                            : FontWeight.w600,
+                                        letterSpacing: 0.3,
+                                      ),
+                                    ),
+                                    if (selected)
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                          left: 4.0,
+                                        ),
+                                        child: Icon(
+                                          Icons.check_circle,
+                                          color: Colors.white,
+                                          size: 14,
+                                        ),
+                                      ),
+                                  ],
+                                ),
                               ),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                color: Color(0xFF8e2de2),
-                                width: 2,
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              vertical: 16,
-                              horizontal: 16,
-                            ),
-                            prefixIcon: const Icon(
-                              Icons.mood,
-                              color: Color(0xFF8e2de2),
-                              size: 20,
-                            ),
-                          ),
-                          value: mood,
-                          items: moods
-                              .map(
-                                (m) =>
-                                    DropdownMenuItem(value: m, child: Text(m)),
-                              )
-                              .toList(),
-                          onChanged: (value) => setState(() => mood = value),
-                          validator: (value) => value == null
-                              ? 'Seleccione un estado de ánimo'
-                              : null,
+                            );
+                          }).toList(),
                         ),
                         const SizedBox(height: 16),
                         Text(
@@ -1280,57 +1373,105 @@ class _DreamFormDialogState extends State<DreamFormDialog> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Color.fromRGBO(255, 255, 255, 0.08),
-                            border: Border.all(
-                              color: Color(0xFF8e2de2),
-                              width: 1.5,
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Wrap(
-                            spacing: 8.0,
-                            runSpacing: 8.0,
-                            children: tagOptions.map((tag) {
-                              final selected = tags.contains(tag);
-                              return FilterChip(
-                                label: Text(tag),
-                                selected: selected,
-                                selectedColor: Color(
-                                  0xFF8e2de2,
-                                ).withValues(alpha: 0.3),
-                                side: BorderSide(
-                                  color: selected
-                                      ? Color(0xFF8e2de2)
-                                      : Colors.white30,
-                                  width: 1.5,
+                        Wrap(
+                          spacing: 8.0,
+                          runSpacing: 8.0,
+                          children: tagOptions.map((tag) {
+                            final selected = tags.contains(tag);
+                            return GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  if (selected) {
+                                    tags.remove(tag);
+                                  } else {
+                                    tags.add(tag);
+                                  }
+                                });
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeOutCubic,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 7,
                                 ),
-                                labelStyle: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: selected
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
+                                decoration: BoxDecoration(
+                                  gradient: selected
+                                      ? LinearGradient(
+                                          colors: [
+                                            Color(0xFF8e2de2),
+                                            Color(0xFF6c5ce7),
+                                          ],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                        )
+                                      : LinearGradient(
+                                          colors: [
+                                            Colors.white.withValues(
+                                              alpha: 0.15,
+                                            ),
+                                            Colors.white.withValues(
+                                              alpha: 0.05,
+                                            ),
+                                          ],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                        ),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: selected
+                                        ? Color(0xFF8e2de2)
+                                        : Colors.white.withValues(alpha: 0.2),
+                                    width: selected ? 2 : 1.5,
+                                  ),
+                                  boxShadow: selected
+                                      ? [
+                                          BoxShadow(
+                                            color: Color(
+                                              0xFF8e2de2,
+                                            ).withValues(alpha: 0.4),
+                                            blurRadius: 12,
+                                            spreadRadius: 0,
+                                          ),
+                                        ]
+                                      : null,
                                 ),
-                                backgroundColor: Color.fromRGBO(
-                                  255,
-                                  255,
-                                  255,
-                                  0.05,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      _getTagIcon(tag),
+                                      color: Colors.white,
+                                      size: 15,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      tag,
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: selected
+                                            ? FontWeight.bold
+                                            : FontWeight.w600,
+                                        letterSpacing: 0.3,
+                                      ),
+                                    ),
+                                    if (selected)
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                          left: 4.0,
+                                        ),
+                                        child: Icon(
+                                          Icons.check_circle,
+                                          color: Colors.white,
+                                          size: 14,
+                                        ),
+                                      ),
+                                  ],
                                 ),
-                                onSelected: (bool value) {
-                                  setState(() {
-                                    if (value) {
-                                      tags.add(tag);
-                                    } else {
-                                      tags.remove(tag);
-                                    }
-                                  });
-                                },
-                              );
-                            }).toList(),
-                          ),
+                              ),
+                            );
+                          }).toList(),
                         ),
                         const SizedBox(height: 16),
                         Text(
@@ -1451,13 +1592,30 @@ class _DreamFormDialogState extends State<DreamFormDialog> {
                           },
                         ),
                         const SizedBox(height: 16),
-                        Text(
-                          'Notas/Interpretación',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Color(0xFF8e2de2).withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(
+                                Icons.note,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              'Notas/Interpretación',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 8),
                         TextFormField(
@@ -1559,13 +1717,30 @@ class _DreamFormDialogState extends State<DreamFormDialog> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        Text(
-                          'Información del sueño',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Color(0xFF8e2de2).withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(
+                                Icons.nightlight_round,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              'Información del sueño',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 8),
                         TextFormField(
@@ -1611,7 +1786,7 @@ class _DreamFormDialogState extends State<DreamFormDialog> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
