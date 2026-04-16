@@ -338,6 +338,14 @@ class _DreamDetailPageState extends State<DreamDetailPage>
 
       if (response.statusCode == 200) {
         final updatedDream = Dream.fromJson(jsonDecode(response.body));
+        debugPrint('=== EDIT DEBUG ===');
+        debugPrint('Response body: ${response.body}');
+        debugPrint('updatedDream.isShared: ${updatedDream.isShared}');
+        debugPrint('widget.dream.id: ${widget.dream.id}');
+        debugPrint(
+          'Will sync: ${updatedDream.isShared && widget.dream.id != null}',
+        );
+
         setState(() {
           widget.dream.title = updatedDream.title;
           widget.dream.date = updatedDream.date;
@@ -355,7 +363,10 @@ class _DreamDetailPageState extends State<DreamDetailPage>
 
         // Si el sueño es compartido, actualizar también el post del foro
         if (updatedDream.isShared && widget.dream.id != null) {
+          debugPrint('✅ Condición de sync cumplida, llamando _syncForumPost');
           await _syncForumPost(token, updatedDream);
+        } else {
+          debugPrint('❌ Condición de sync NO cumplida');
         }
 
         if (mounted) {
