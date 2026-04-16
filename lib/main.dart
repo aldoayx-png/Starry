@@ -637,11 +637,9 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                             }
                           }
                           await _fetchDreams();
-                          if (mounted) {
-                            Navigator.of(context).pop();
-                          }
+                          // Navigation ya maneja el dialog (no hacer pop aquí)
                         } else if (response.statusCode == 401) {
-                          // Token inválido o expirado
+                          // Token inválido o expirado - el dialog se cerrará después del callback
                           await TokenStorage.clearToken();
                           if (mounted) {
                             Navigator.of(context).pushNamedAndRemoveUntil(
@@ -649,6 +647,7 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                               (Route<dynamic> route) => false,
                             );
                           }
+                          return;
                         } else {
                           // Manejar error de guardado
                         }
@@ -1860,7 +1859,7 @@ class _DreamFormDialogState extends State<DreamFormDialog> {
                     ),
                   ),
                   ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       if (_formKey.currentState!.validate()) {
                         _formKey.currentState!.save();
                         final dream = Dream(
@@ -1877,8 +1876,10 @@ class _DreamFormDialogState extends State<DreamFormDialog> {
                           dreamInfo: dreamInfo,
                           isShared: isShared,
                         );
-                        widget.onSave?.call(dream);
-                        Navigator.of(context).pop();
+                        await widget.onSave?.call(dream);
+                        if (mounted) {
+                          Navigator.of(context).pop();
+                        }
                       }
                     },
                     style: ElevatedButton.styleFrom(
