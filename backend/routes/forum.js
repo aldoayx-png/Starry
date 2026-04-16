@@ -43,10 +43,20 @@ router.get('/posts/:id', async (req, res) => {
 // Crear un nuevo post en el foro (requiere autenticación)
 router.post('/posts', auth, async (req, res) => {
   try {
-    const postData = { ...req.body, userId: req.userId };
+    // Asegurar que dreamId se guarde si viene en req.body
+    const postData = { 
+      ...req.body, 
+      userId: req.userId,
+      dreamId: req.body.dreamId || null  // Explícitamente guardar dreamId
+    };
     const post = new ForumPost(postData);
     await post.save();
     await post.populate('userId', 'username');
+    console.log('✓ Nuevo post del foro creado:', { 
+      postId: post._id, 
+      dreamId: post.dreamId,
+      title: post.title 
+    });
     res.status(201).json(post);
   } catch (err) {
     console.error('Error al crear el post del foro:', err);
@@ -205,19 +215,31 @@ router.delete('/posts/:postId/comments/:commentId', auth, async (req, res) => {
 // Actualizar post del foro por dreamId (usado cuando se edita el dream original)
 router.put('/dreams/:dreamId', auth, async (req, res) => {
   try {
+    console.log('🔄 Sincronizando dream:', {
+      dreamId: req.params.dreamId,
+      userId: req.userId,
+      updateFields: Object.keys(req.body)
+    });
+
     // Buscar el post del foro que tiene este dreamId
     let post = await ForumPost.findOne({ dreamId: req.params.dreamId });
     
     if (!post) {
-      // Si no existe, retornar error pero sin romper la app
+      console.warn('⚠ Post no encontrado para dreamId:', req.params.dreamId);
+      // Sugerir que quizás el post fue eliminado o no fue compartido
       return res.status(404).json({ 
         error: 'Post del foro no encontrado para este dream',
-        message: 'El dream no ha sido compartido en el foro aún'
+        message: 'El dream no ha sido compartido en el foro aún, o el post fue eliminado',
+        dreamId: req.params.dreamId
       });
     }
 
     // Verificar que el usuario es el propietario del post
     if (post.userId.toString() !== req.userId) {
+      console.warn('🚫 Usuario no autorizado intenta actualizar post:', {
+        postUserId: post.userId.toString(),
+        requestUserId: req.userId
+      });
       return res.status(403).json({ error: 'No autorizado para actualizar este post' });
     }
 
@@ -234,16 +256,23 @@ router.put('/dreams/:dreamId', auth, async (req, res) => {
       }
     });
 
+    console.log('📝 Actualizando post con:', updateData);
+
     const updatedPost = await ForumPost.findByIdAndUpdate(
       post._id,
       updateData,
       { returnDocument: 'after' }
     ).populate('userId', 'username');
 
+    console.log('✓ Post del foro sincronizado exitosamente');
     res.json(updatedPost);
   } catch (err) {
-    console.error('Error al sincronizar dream con foro:', err);
-    res.status(500).json({ error: 'Error al sincronizar con el foro', details: err.message });
+    console.error('❌ Error al sincronizar dream con foro:', err);
+    res.status(500).json({ 
+      error: 'Error al sincronizar con el foro', 
+      details: err.message,
+      dreamId: req.params.dreamId
+    });
   }
 });
 
