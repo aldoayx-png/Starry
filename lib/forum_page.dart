@@ -112,16 +112,28 @@ class _ForumPageState extends State<ForumPage>
   }
 
   Future<void> _fetchForumPosts() async {
+    // Limpiar datos locales para forzar recarga fresca
+    _forumPosts.clear();
+    _filteredPosts.clear();
+    _likedPosts.clear();
+    _likeCount.clear();
+    _processingLikes.clear();
+
     setState(() {
       _isLoading = true;
     });
     try {
       final token = await TokenStorage.getToken();
       final response = await http.get(
-        Uri.parse('https://starry-1zm8.onrender.com/api/forum/posts'),
+        Uri.parse(
+          'https://starry-1zm8.onrender.com/api/forum/posts?timestamp=${DateTime.now().millisecondsSinceEpoch}',
+        ),
         headers: {
           'Content-Type': 'application/json',
           if (token != null) 'Authorization': 'Bearer $token',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
         },
       );
       if (response.statusCode == 200) {
@@ -504,7 +516,13 @@ class _ForumPageState extends State<ForumPage>
                             );
                             // Recarga los posts al volver de ForumDreamDetailPage
                             if (mounted) {
-                              _fetchForumPosts();
+                              // Espera un poco para asegurar que el servidor procesó los cambios
+                              await Future.delayed(
+                                const Duration(milliseconds: 500),
+                              );
+                              if (mounted) {
+                                _fetchForumPosts();
+                              }
                             }
                           },
                           child: Center(

@@ -267,7 +267,38 @@ class _DreamDetailPageState extends State<DreamDetailPage>
           widget.dream.isRecurring = updatedDream.isRecurring;
           widget.dream.wokeUp = updatedDream.wokeUp;
           widget.dream.dreamInfo = updatedDream.dreamInfo;
+          widget.dream.isShared = updatedDream.isShared;
         });
+
+        // Si el sueño es compartido, actualizar también el post del foro
+        if (updatedDream.isShared && widget.dream.id != null) {
+          try {
+            await http.put(
+              Uri.parse(
+                'https://starry-1zm8.onrender.com/api/forum/posts/${widget.dream.id}',
+              ),
+              headers: {
+                'Content-Type': 'application/json',
+                if (token != null) 'Authorization': 'Bearer $token',
+              },
+              body: jsonEncode({
+                'title': updatedDream.title,
+                'date': updatedDream.date?.toIso8601String(),
+                'mood': updatedDream.mood,
+                'tags': updatedDream.tags,
+                'people': updatedDream.people,
+                'place': updatedDream.place,
+                'clarity': updatedDream.clarity,
+                'notes': updatedDream.notes,
+                'isRecurring': updatedDream.isRecurring,
+                'wokeUp': updatedDream.wokeUp,
+                'dreamInfo': updatedDream.dreamInfo,
+              }),
+            );
+          } catch (e) {
+            // Error al actualizar el post del foro, pero continuamos
+          }
+        }
 
         if (mounted) {
           Navigator.of(context).pop({'edited': true, 'dream': widget.dream});
