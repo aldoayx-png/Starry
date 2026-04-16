@@ -312,7 +312,7 @@ router.put('/dreams/:dreamId', auth, async (req, res) => {
     const updatedPost = await ForumPost.findByIdAndUpdate(
       post._id,
       updateData,
-      { new: true }
+      { returnDocument: 'after' }
     ).populate('userId', 'username');
 
     console.log('✅ Post sincronizado exitosamente:', updatedPost._id);
