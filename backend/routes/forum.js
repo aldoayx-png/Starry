@@ -206,10 +206,14 @@ router.delete('/posts/:postId/comments/:commentId', auth, async (req, res) => {
 router.put('/dreams/:dreamId', auth, async (req, res) => {
   try {
     // Buscar el post del foro que tiene este dreamId
-    const post = await ForumPost.findOne({ dreamId: req.params.dreamId });
+    let post = await ForumPost.findOne({ dreamId: req.params.dreamId });
+    
     if (!post) {
-      // Si no existe, crear uno nuevo (fallback)
-      return res.status(404).json({ error: 'Post del foro no encontrado' });
+      // Si no existe, retornar error pero sin romper la app
+      return res.status(404).json({ 
+        error: 'Post del foro no encontrado para este dream',
+        message: 'El dream no ha sido compartido en el foro aún'
+      });
     }
 
     // Verificar que el usuario es el propietario del post
@@ -239,7 +243,7 @@ router.put('/dreams/:dreamId', auth, async (req, res) => {
     res.json(updatedPost);
   } catch (err) {
     console.error('Error al sincronizar dream con foro:', err);
-    res.status(400).json({ error: 'Error al sincronizar con el foro' });
+    res.status(500).json({ error: 'Error al sincronizar con el foro', details: err.message });
   }
 });
 

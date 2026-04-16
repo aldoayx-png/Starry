@@ -637,7 +637,9 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                             }
                           }
                           await _fetchDreams();
-                          Navigator.of(context).pop();
+                          if (mounted) {
+                            Navigator.of(context).pop();
+                          }
                         } else if (response.statusCode == 401) {
                           // Token inválido o expirado
                           await TokenStorage.clearToken();
