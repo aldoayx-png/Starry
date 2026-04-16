@@ -475,6 +475,25 @@ class _DreamDetailPageState extends State<DreamDetailPage>
   Future<void> _deleteDreamOnBackend() async {
     try {
       final token = await TokenStorage.getToken();
+
+      // Si el sueño fue compartido, borrarlo del foro primero
+      if (widget.dream.isShared) {
+        try {
+          await http.delete(
+            Uri.parse(
+              'https://starry-1zm8.onrender.com/api/forum/posts/${widget.dream.id}',
+            ),
+            headers: {
+              'Content-Type': 'application/json',
+              if (token != null) 'Authorization': 'Bearer $token',
+            },
+          );
+        } catch (e) {
+          // Continuar con el borrado del sueño incluso si el foro falla
+        }
+      }
+
+      // Borrar el sueño principal
       final response = await http.delete(
         Uri.parse('$_baseUrl/${widget.dream.id}'),
         headers: {
