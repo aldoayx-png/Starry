@@ -572,74 +572,107 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
               ),
               child: FloatingActionButton(
                 onPressed: () {
+                  final parentContext = context;
                   showDialog(
                     context: context,
-                    builder: (context) => DreamFormDialog(
+                    builder: (dialogContext) => DreamFormDialog(
                       onSave: (dream) async {
-                        final token = await TokenStorage.getToken();
-                        final response = await http.post(
-                          Uri.parse(
-                            'https://starry-1zm8.onrender.com/api/dreams',
-                          ),
-                          headers: {
-                            'Content-Type': 'application/json',
-                            if (token != null) 'Authorization': 'Bearer $token',
-                          },
-                          body: jsonEncode({
-                            'title': dream.title,
-                            'date': dream.date?.toIso8601String(),
-                            'mood': dream.mood,
-                            'tags': dream.tags,
-                            'people': dream.people,
-                            'place': dream.place,
-                            'clarity': dream.clarity,
-                            'notes': dream.notes,
-                            'isRecurring': dream.isRecurring,
-                            'wokeUp': dream.wokeUp,
-                            'dreamInfo': dream.dreamInfo,
-                            'isShared': dream.isShared,
-                          }),
-                        );
-                        if (response.statusCode == 201) {
-                          // Si está marcado para compartir en el foro, guardar también en el foro
-                          if (dream.isShared) {
-                            await http.post(
-                              Uri.parse(
-                                'https://starry-1zm8.onrender.com/api/forum/posts',
-                              ),
-                              headers: {
-                                'Content-Type': 'application/json',
-                                if (token != null)
-                                  'Authorization': 'Bearer $token',
-                              },
-                              body: jsonEncode({
-                                'title': dream.title,
-                                'date': dream.date?.toIso8601String(),
-                                'mood': dream.mood,
-                                'tags': dream.tags,
-                                'people': dream.people,
-                                'place': dream.place,
-                                'clarity': dream.clarity,
-                                'notes': dream.notes,
-                                'isRecurring': dream.isRecurring,
-                                'wokeUp': dream.wokeUp,
-                                'dreamInfo': dream.dreamInfo,
-                              }),
-                            );
+                        try {
+                          final token = await TokenStorage.getToken();
+                          if (!mounted) return;
+
+                          final response = await http.post(
+                            Uri.parse(
+                              'https://starry-1zm8.onrender.com/api/dreams',
+                            ),
+                            headers: {
+                              'Content-Type': 'application/json',
+                              if (token != null)
+                                'Authorization': 'Bearer $token',
+                            },
+                            body: jsonEncode({
+                              'title': dream.title,
+                              'date': dream.date?.toIso8601String(),
+                              'mood': dream.mood,
+                              'tags': dream.tags,
+                              'people': dream.people,
+                              'place': dream.place,
+                              'clarity': dream.clarity,
+                              'notes': dream.notes,
+                              'isRecurring': dream.isRecurring,
+                              'wokeUp': dream.wokeUp,
+                              'dreamInfo': dream.dreamInfo,
+                              'isShared': dream.isShared,
+                            }),
+                          );
+                          if (!mounted) return;
+
+                          if (response.statusCode == 201) {
+                            // Si está marcado para compartir en el foro, guardar también en el foro
+                            if (dream.isShared) {
+                              try {
+                                await http.post(
+                                  Uri.parse(
+                                    'https://starry-1zm8.onrender.com/api/forum/posts',
+                                  ),
+                                  headers: {
+                                    'Content-Type': 'application/json',
+                                    if (token != null)
+                                      'Authorization': 'Bearer $token',
+                                  },
+                                  body: jsonEncode({
+                                    'title': dream.title,
+                                    'date': dream.date?.toIso8601String(),
+                                    'mood': dream.mood,
+                                    'tags': dream.tags,
+                                    'people': dream.people,
+                                    'place': dream.place,
+                                    'clarity': dream.clarity,
+                                    'notes': dream.notes,
+                                    'isRecurring': dream.isRecurring,
+                                    'wokeUp': dream.wokeUp,
+                                    'dreamInfo': dream.dreamInfo,
+                                  }),
+                                );
+                              } catch (e) {
+                                // Error al compartir en el foro, pero el sueño se guardó
+                              }
+                            }
+                            if (mounted) {
+                              Navigator.of(parentContext).pop();
+                            }
+                            if (mounted) {
+                              await _fetchDreams();
+                            }
+                          } else if (response.statusCode == 401) {
+                            // Token inválido o expirado
+                            await TokenStorage.clearToken();
+                            if (mounted) {
+                              Navigator.of(
+                                parentContext,
+                              ).pushNamedAndRemoveUntil(
+                                '/login',
+                                (Route<dynamic> route) => false,
+                              );
+                            }
+                          } else {
+                            // Manejar error de guardado
+                            if (mounted) {
+                              ScaffoldMessenger.of(parentContext).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Error al guardar el sueño'),
+                                ),
+                              );
+                            }
                           }
-                          await _fetchDreams();
-                          Navigator.of(context).pop();
-                        } else if (response.statusCode == 401) {
-                          // Token inválido o expirado
-                          await TokenStorage.clearToken();
+                        } catch (e) {
                           if (mounted) {
-                            Navigator.of(context).pushNamedAndRemoveUntil(
-                              '/login',
-                              (Route<dynamic> route) => false,
+                            ScaffoldMessenger.of(parentContext).showSnackBar(
+                              const SnackBar(
+                                content: Text('Error de conexión'),
+                              ),
                             );
                           }
-                        } else {
-                          // Manejar error de guardado
                         }
                       },
                     ),

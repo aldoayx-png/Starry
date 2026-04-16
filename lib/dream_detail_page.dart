@@ -231,6 +231,8 @@ class _DreamDetailPageState extends State<DreamDetailPage>
   /// Updates dream on backend and updates local state
   Future<void> _updateDreamOnBackend(Dream editedDream) async {
     try {
+      if (!mounted) return;
+
       final token = await TokenStorage.getToken();
       final response = await http.put(
         Uri.parse('$_baseUrl/${widget.dream.id}'),
@@ -252,6 +254,8 @@ class _DreamDetailPageState extends State<DreamDetailPage>
           'dreamInfo': editedDream.dreamInfo,
         }),
       );
+
+      if (!mounted) return;
 
       if (response.statusCode == 200) {
         final updatedDream = Dream.fromJson(jsonDecode(response.body));
@@ -300,15 +304,15 @@ class _DreamDetailPageState extends State<DreamDetailPage>
           }
         }
 
-        if (mounted) {
-          Navigator.of(context).pop({'edited': true, 'dream': widget.dream});
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Sueño actualizado correctamente'),
-              duration: Duration(seconds: 2),
-            ),
-          );
-        }
+        if (!mounted) return;
+
+        Navigator.of(context).pop({'edited': true, 'dream': widget.dream});
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Sueño actualizado correctamente'),
+            duration: Duration(seconds: 2),
+          ),
+        );
       } else if (response.statusCode == 401) {
         await TokenStorage.clearToken();
         if (mounted) {
@@ -320,7 +324,9 @@ class _DreamDetailPageState extends State<DreamDetailPage>
         _showErrorSnackBar('Error al editar en el servidor');
       }
     } catch (e) {
-      _showErrorSnackBar('Error de conexión al editar');
+      if (mounted) {
+        _showErrorSnackBar('Error de conexión al editar');
+      }
     }
   }
 
@@ -474,12 +480,14 @@ class _DreamDetailPageState extends State<DreamDetailPage>
   /// Deletes dream from backend
   Future<void> _deleteDreamOnBackend() async {
     try {
+      if (!mounted) return;
+
       final token = await TokenStorage.getToken();
 
       // Si el sueño fue compartido, borrarlo del foro primero
-      if (widget.dream.isShared) {
+      if (widget.dream.isShared && widget.dream.id != null) {
         try {
-          await http.delete(
+          final forumResponse = await http.delete(
             Uri.parse(
               'https://starry-1zm8.onrender.com/api/forum/posts/${widget.dream.id}',
             ),
@@ -488,10 +496,17 @@ class _DreamDetailPageState extends State<DreamDetailPage>
               if (token != null) 'Authorization': 'Bearer $token',
             },
           );
+          // No es error si el post no existe (404)
+          if (forumResponse.statusCode != 200 &&
+              forumResponse.statusCode != 404) {
+            // Log de error pero continuar
+          }
         } catch (e) {
           // Continuar con el borrado del sueño incluso si el foro falla
         }
       }
+
+      if (!mounted) return;
 
       // Borrar el sueño principal
       final response = await http.delete(
@@ -502,16 +517,16 @@ class _DreamDetailPageState extends State<DreamDetailPage>
         },
       );
 
+      if (!mounted) return;
+
       if (response.statusCode == 200) {
-        if (mounted) {
-          Navigator.of(context).pop({'deleted': true, 'dream': widget.dream});
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Sueño eliminado correctamente'),
-              duration: Duration(seconds: 2),
-            ),
-          );
-        }
+        Navigator.of(context).pop({'deleted': true, 'dream': widget.dream});
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Sueño eliminado correctamente'),
+            duration: Duration(seconds: 2),
+          ),
+        );
       } else if (response.statusCode == 401) {
         await TokenStorage.clearToken();
         if (mounted) {
@@ -523,7 +538,9 @@ class _DreamDetailPageState extends State<DreamDetailPage>
         _showErrorSnackBar('Error al eliminar el sueño');
       }
     } catch (e) {
-      _showErrorSnackBar('Error de conexión al eliminar');
+      if (mounted) {
+        _showErrorSnackBar('Error de conexión al eliminar');
+      }
     }
   }
 
