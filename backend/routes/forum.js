@@ -90,6 +90,19 @@ router.delete('/posts/:id', auth, async (req, res) => {
   }
 });
 
+// Eliminar un post por dreamId (cuando se borra un sueño compartido)
+router.delete('/posts/by-dream/:dreamId', auth, async (req, res) => {
+  try {
+    const post = await ForumPost.findOne({ dreamId: req.params.dreamId });
+    if (!post) return res.status(404).json({ error: 'Post no encontrado' });
+    if (post.userId.toString() !== req.userId) return res.status(403).json({ error: 'No autorizado' });
+    await ForumPost.findByIdAndDelete(post._id);
+    res.json({ message: 'Post eliminado' });
+  } catch (err) {
+    res.status(400).json({ error: 'Error al eliminar el post' });
+  }
+});
+
 // Agregar un like a un post
 router.post('/posts/:id/like', auth, async (req, res) => {
   try {
