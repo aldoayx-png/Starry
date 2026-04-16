@@ -130,6 +130,37 @@ class _ForumPageState extends State<ForumPage> with TickerProviderStateMixin {
     }
   }
 
+  void _updateForumPost(Dream updatedDream) {
+    setState(() {
+      // Actualizar en _forumPosts
+      for (int i = 0; i < _forumPosts.length; i++) {
+        if (_forumPosts[i]['_id'] == updatedDream.id) {
+          _forumPosts[i]['title'] = updatedDream.title;
+          _forumPosts[i]['date'] = updatedDream.date?.toIso8601String();
+          _forumPosts[i]['mood'] = updatedDream.mood;
+          _forumPosts[i]['tags'] = updatedDream.tags;
+          _forumPosts[i]['people'] = updatedDream.people;
+          _forumPosts[i]['place'] = updatedDream.place;
+          _forumPosts[i]['clarity'] = updatedDream.clarity;
+          _forumPosts[i]['notes'] = updatedDream.notes;
+          _forumPosts[i]['isRecurring'] = updatedDream.isRecurring;
+          _forumPosts[i]['wokeUp'] = updatedDream.wokeUp;
+          _forumPosts[i]['dreamInfo'] = updatedDream.dreamInfo;
+          break;
+        }
+      }
+      // Re-aplicar el filtro para actualizar también _filteredPosts
+      _applyFilter(_currentFilter);
+    });
+  }
+
+  void _removeForumPost(Dream deletedDream) {
+    setState(() {
+      _forumPosts.removeWhere((post) => post['_id'] == deletedDream.id);
+      _applyFilter(_currentFilter);
+    });
+  }
+
   Future<void> _toggleLike(String postId, bool isLiked) async {
     // Prevenir múltiples clicks
     if (_processingLikes.contains(postId)) return;
@@ -468,15 +499,26 @@ class _ForumPageState extends State<ForumPage> with TickerProviderStateMixin {
                     itemBuilder: (context, index) {
                       final post = _filteredPosts[index];
                       return GestureDetector(
-                        onTap: () {
+                        onTap: () async {
                           final dream = Dream.fromJson(post);
-                          Navigator.push(
+                          final result = await Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) =>
                                   ForumDreamDetailPage(dream: dream),
                             ),
                           );
+
+                          // Actualizar el sueño en la lista si fue editado o eliminado
+                          if (result != null) {
+                            if (result is Map<String, dynamic>) {
+                              if (result['edited'] == true) {
+                                _updateForumPost(result['dream']);
+                              } else if (result['deleted'] == true) {
+                                _removeForumPost(result['dream']);
+                              }
+                            }
+                          }
                         },
                         child: Center(
                           child: Container(
