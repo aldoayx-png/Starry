@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const ForumPostSchema = new mongoose.Schema(
   {
+    dreamId: { type: String }, // ID del dream original en la colección dreams
     title: { type: String, required: true },
     date: { type: Date },
     mood: { type: String },

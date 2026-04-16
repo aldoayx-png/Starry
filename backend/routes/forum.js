@@ -200,4 +200,71 @@ router.delete('/posts/:postId/comments/:commentId', auth, async (req, res) => {
   }
 });
 
+// ====== ENDPOINT PARA SINCRONIZACIÓN DE DREAMS COMPARTIDOS ======
+
+// Actualizar post del foro por dreamId (usado cuando se edita el dream original)
+router.put('/dreams/:dreamId', auth, async (req, res) => {
+  try {
+    // Buscar el post del foro que tiene este dreamId
+    const post = await ForumPost.findOne({ dreamId: req.params.dreamId });
+    if (!post) {
+      // Si no existe, crear uno nuevo (fallback)
+      return res.status(404).json({ error: 'Post del foro no encontrado' });
+    }
+
+    // Verificar que el usuario es el propietario del post
+    if (post.userId.toString() !== req.userId) {
+      return res.status(403).json({ error: 'No autorizado para actualizar este post' });
+    }
+
+    // Actualizar solo los campos de Dream que están permitidos
+    const allowedFields = [
+      'title', 'date', 'mood', 'tags', 'people', 'place', 
+      'clarity', 'notes', 'isRecurring', 'wokeUp', 'dreamInfo'
+    ];
+    
+    const updateData = {};
+    allowedFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        updateData[field] = req.body[field];
+      }
+    });
+
+    const updatedPost = await ForumPost.findByIdAndUpdate(
+      post._id,
+      updateData,
+      { returnDocument: 'after' }
+    ).populate('userId', 'username');
+
+    res.json(updatedPost);
+  } catch (err) {
+    console.error('Error al sincronizar dream con foro:', err);
+    res.status(400).json({ error: 'Error al sincronizar con el foro' });
+  }
+});
+
+// Obtener post del foro por dreamId
+router.get('/dreams/:dreamId', optionalAuth, async (req, res) => {
+  try {
+    const post = await ForumPost.findOne({ dreamId: req.params.dreamId })
+      .populate('userId', 'username')
+      .populate('comments.userId', 'username');
+    
+    if (!post) {
+      return res.status(404).json({ error: 'Post del foro no encontrado' });
+    }
+
+    // Si hay autenticación, agregar flag de si el usuario ha likeado
+    if (req.userId) {
+      const postObj = post.toObject ? post.toObject() : post;
+      postObj.userHasLiked = post.likedBy.some(id => id.toString() === req.userId);
+      return res.json(postObj);
+    }
+
+    res.json(post);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener el post del foro' });
+  }
+});
+
 module.exports = router;
