@@ -332,6 +332,7 @@ class _DreamDetailPageState extends State<DreamDetailPage>
           'isRecurring': editedDream.isRecurring,
           'wokeUp': editedDream.wokeUp,
           'dreamInfo': editedDream.dreamInfo,
+          'isShared': editedDream.isShared,
         }),
       );
 
