@@ -1072,6 +1072,44 @@ class _DreamFormDialogState extends State<DreamFormDialog> {
     }
   }
 
+  Color _getMoodColor(String moodType) {
+    switch (moodType) {
+      case 'Feliz':
+        return Colors.greenAccent;
+      case 'Triste':
+        return Colors.blueAccent;
+      case 'Ansioso':
+        return Colors.orangeAccent;
+      case 'Asustado':
+        return Colors.redAccent;
+      case 'Neutral':
+        return Colors.grey;
+      default:
+        return Colors.white24;
+    }
+  }
+
+  Color _getTagColor(String tag) {
+    switch (tag) {
+      case 'Lúcido':
+        return Colors.amber.shade700;
+      case 'Pesadilla':
+        return Colors.red.shade700;
+      case 'Recurrente':
+        return Colors.purple.shade700;
+      case 'Normal':
+        return Colors.indigo.shade700;
+      case 'Colorido':
+        return Colors.pink.shade700;
+      case 'Corto':
+        return Colors.cyan.shade700;
+      case 'Largo':
+        return Colors.blue.shade700;
+      default:
+        return Colors.purple.shade700;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -1272,6 +1310,7 @@ class _DreamFormDialogState extends State<DreamFormDialog> {
                           runSpacing: 8.0,
                           children: moods.map((moodOption) {
                             final selected = mood == moodOption;
+                            final moodColor = _getMoodColor(moodOption);
                             return GestureDetector(
                               onTap: () {
                                 setState(() {
@@ -1289,8 +1328,8 @@ class _DreamFormDialogState extends State<DreamFormDialog> {
                                   gradient: selected
                                       ? LinearGradient(
                                           colors: [
-                                            Color(0xFF8e2de2),
-                                            Color(0xFF6c5ce7),
+                                            moodColor,
+                                            moodColor.withValues(alpha: 0.7),
                                           ],
                                           begin: Alignment.topLeft,
                                           end: Alignment.bottomRight,
@@ -1310,16 +1349,16 @@ class _DreamFormDialogState extends State<DreamFormDialog> {
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
                                     color: selected
-                                        ? Color(0xFF8e2de2)
+                                        ? moodColor
                                         : Colors.white.withValues(alpha: 0.2),
                                     width: selected ? 2 : 1.5,
                                   ),
                                   boxShadow: selected
                                       ? [
                                           BoxShadow(
-                                            color: Color(
-                                              0xFF8e2de2,
-                                            ).withValues(alpha: 0.4),
+                                            color: moodColor.withValues(
+                                              alpha: 0.4,
+                                            ),
                                             blurRadius: 12,
                                             spreadRadius: 0,
                                           ),
@@ -1399,8 +1438,10 @@ class _DreamFormDialogState extends State<DreamFormDialog> {
                                   gradient: selected
                                       ? LinearGradient(
                                           colors: [
-                                            Color(0xFF8e2de2),
-                                            Color(0xFF6c5ce7),
+                                            _getTagColor(tag),
+                                            _getTagColor(
+                                              tag,
+                                            ).withValues(alpha: 0.7),
                                           ],
                                           begin: Alignment.topLeft,
                                           end: Alignment.bottomRight,
@@ -1420,15 +1461,15 @@ class _DreamFormDialogState extends State<DreamFormDialog> {
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
                                     color: selected
-                                        ? Color(0xFF8e2de2)
+                                        ? _getTagColor(tag)
                                         : Colors.white.withValues(alpha: 0.2),
                                     width: selected ? 2 : 1.5,
                                   ),
                                   boxShadow: selected
                                       ? [
                                           BoxShadow(
-                                            color: Color(
-                                              0xFF8e2de2,
+                                            color: _getTagColor(
+                                              tag,
                                             ).withValues(alpha: 0.4),
                                             blurRadius: 12,
                                             spreadRadius: 0,

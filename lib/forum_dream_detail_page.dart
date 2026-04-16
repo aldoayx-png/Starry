@@ -304,6 +304,226 @@ class _ForumDreamDetailPageState extends State<ForumDreamDetailPage>
     }
   }
 
+  /// Builds the dream info chips section with better organization
+  Widget _buildDreamInfoChips() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Detalles del Sueño',
+          style: TextStyle(
+            color: Colors.white70,
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 14),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            if (widget.dream.mood != null)
+              _DreamInfoChip(
+                icon: _getMoodIcon(widget.dream.mood!),
+                label: widget.dream.mood!,
+                color: _getMoodColor(widget.dream.mood!),
+              ),
+            if (widget.dream.date != null)
+              _DreamInfoChip(
+                icon: Icons.calendar_today,
+                label: widget.dream.date!.toLocal().toString().split(' ')[0],
+                color: Colors.deepPurple.shade700,
+              ),
+            if (widget.dream.people != null && widget.dream.people!.isNotEmpty)
+              _DreamInfoChip(
+                icon: Icons.people,
+                label: widget.dream.people!,
+                color: Colors.indigo.shade700,
+              ),
+            if (widget.dream.place != null && widget.dream.place!.isNotEmpty)
+              _DreamInfoChip(
+                icon: Icons.location_on,
+                label: widget.dream.place!,
+                color: Colors.red.shade700,
+              ),
+            _DreamInfoChip(
+              icon: Icons.visibility,
+              label: widget.dream.clarity.round().toString(),
+              color: const Color(0xFF10B981),
+            ),
+            _DreamInfoChip(
+              icon: Icons.repeat,
+              label: widget.dream.isRecurring ? 'Recurrente' : 'Única',
+              color: Colors.purple.shade900,
+            ),
+            _DreamInfoChip(
+              icon: Icons.alarm,
+              label: widget.dream.wokeUp ? 'Despertó' : 'Continuó',
+              color: Colors.indigo.shade900,
+            ),
+            ...widget.dream.tags.map(
+              (tag) => _DreamInfoChip(
+                icon: _getTagIcon(tag),
+                label: tag,
+                color: _getTagColor(tag),
+              ),
+            ),
+          ],
+        ),
+        if (widget.dream.notes != null && widget.dream.notes!.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: Colors.blueGrey.shade900.withValues(alpha: 0.4),
+              border: Border.all(
+                color: Colors.blueGrey.shade700.withValues(alpha: 0.5),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.note, color: Colors.blueGrey, size: 18),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    widget.dream.notes!,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 13,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  /// Builds the dream description section
+  Widget _buildDreamDescription() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Descripción del Sueño',
+          style: TextStyle(
+            color: Colors.white70,
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            gradient: LinearGradient(
+              colors: [Colors.black87, Colors.black.withValues(alpha: 0.7)],
+            ),
+            border: Border.all(color: Colors.white10, width: 1),
+          ),
+          child: Text(
+            widget.dream.dreamInfo!,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 15,
+              height: 1.6,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Gets the appropriate icon for a tag
+  IconData _getTagIcon(String tag) {
+    switch (tag) {
+      case 'Lúcido':
+        return Icons.lightbulb;
+      case 'Pesadilla':
+        return Icons.warning;
+      case 'Recurrente':
+        return Icons.repeat;
+      case 'Normal':
+        return Icons.nightlight_round;
+      case 'Colorido':
+        return Icons.palette;
+      case 'Corto':
+        return Icons.timer;
+      case 'Largo':
+        return Icons.hourglass_bottom;
+      default:
+        return Icons.label;
+    }
+  }
+
+  /// Gets the appropriate icon for a mood
+  IconData _getMoodIcon(String moodType) {
+    switch (moodType) {
+      case 'Feliz':
+        return Icons.emoji_emotions;
+      case 'Triste':
+        return Icons.sentiment_dissatisfied;
+      case 'Ansioso':
+        return Icons.sentiment_neutral;
+      case 'Asustado':
+        return Icons.sentiment_very_dissatisfied;
+      case 'Neutral':
+        return Icons.sentiment_satisfied;
+      default:
+        return Icons.mood;
+    }
+  }
+
+  /// Gets the appropriate color for a mood
+  Color _getMoodColor(String moodType) {
+    switch (moodType) {
+      case 'Feliz':
+        return Colors.greenAccent;
+      case 'Triste':
+        return Colors.blueAccent;
+      case 'Ansioso':
+        return Colors.orangeAccent;
+      case 'Asustado':
+        return Colors.redAccent;
+      case 'Neutral':
+        return Colors.grey;
+      default:
+        return Colors.white24;
+    }
+  }
+
+  /// Gets the appropriate color for a tag
+  Color _getTagColor(String tag) {
+    switch (tag) {
+      case 'Lúcido':
+        return Colors.amber.shade700;
+      case 'Pesadilla':
+        return Colors.red.shade700;
+      case 'Recurrente':
+        return Colors.purple.shade700;
+      case 'Normal':
+        return Colors.indigo.shade700;
+      case 'Colorido':
+        return Colors.pink.shade700;
+      case 'Corto':
+        return Colors.cyan.shade700;
+      case 'Largo':
+        return Colors.blue.shade700;
+      default:
+        return Colors.purple.shade700;
+    }
+  }
+
   @override
   void dispose() {
     _controller.dispose();
@@ -413,185 +633,51 @@ class _ForumDreamDetailPageState extends State<ForumDreamDetailPage>
                             Container(
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                gradient: LinearGradient(
+                                gradient: const LinearGradient(
                                   colors: [
                                     Colors.deepPurpleAccent,
                                     Colors.blueAccent,
                                   ],
                                 ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.blueAccent.withValues(
+                                      alpha: 0.4,
+                                    ),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
                               ),
-                              padding: const EdgeInsets.all(8),
+                              padding: const EdgeInsets.all(10),
                               child: const Icon(
                                 Icons.star,
                                 color: Colors.white,
                                 size: 28,
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: 16),
                             Expanded(
                               child: Text(
-                                widget.dream.title ?? '',
+                                widget.dream.title ?? 'Sin título',
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 22,
+                                  fontSize: 26,
+                                  letterSpacing: 0.3,
                                 ),
                                 overflow: TextOverflow.ellipsis,
+                                maxLines: 2,
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 24),
-                        Wrap(
-                          spacing: 14,
-                          runSpacing: 8,
-                          children: [
-                            if (widget.dream.mood != null)
-                              Chip(
-                                label: Text('Ánimo: ${widget.dream.mood}'),
-                                backgroundColor: Colors.blue.shade700,
-                                labelStyle: const TextStyle(
-                                  color: Colors.white,
-                                ),
-                                avatar: const Icon(
-                                  Icons.emoji_emotions,
-                                  color: Colors.white,
-                                  size: 18,
-                                ),
-                              ),
-                            if (widget.dream.date != null)
-                              Chip(
-                                label: Text(
-                                  'Fecha: ${widget.dream.date!.toLocal().toString().split(' ')[0]}',
-                                ),
-                                backgroundColor: Colors.deepPurple.shade700,
-                                labelStyle: const TextStyle(
-                                  color: Colors.white,
-                                ),
-                                avatar: const Icon(
-                                  Icons.calendar_today,
-                                  color: Colors.white,
-                                  size: 18,
-                                ),
-                              ),
-                            if (widget.dream.tags.isNotEmpty)
-                              ...widget.dream.tags.map(
-                                (tag) => Chip(
-                                  label: Text(tag),
-                                  backgroundColor: Colors.purple.shade700,
-                                  labelStyle: const TextStyle(
-                                    color: Colors.white,
-                                  ),
-                                  avatar: const Icon(
-                                    Icons.label,
-                                    color: Colors.white,
-                                    size: 18,
-                                  ),
-                                ),
-                              ),
-                            if (widget.dream.people != null &&
-                                widget.dream.people!.isNotEmpty)
-                              Chip(
-                                label: Text('Personas: ${widget.dream.people}'),
-                                backgroundColor: Colors.indigo.shade700,
-                                labelStyle: const TextStyle(
-                                  color: Colors.white,
-                                ),
-                                avatar: const Icon(
-                                  Icons.people,
-                                  color: Colors.white,
-                                  size: 18,
-                                ),
-                              ),
-                            if (widget.dream.place != null &&
-                                widget.dream.place!.isNotEmpty)
-                              Chip(
-                                label: Text('Lugar: ${widget.dream.place}'),
-                                backgroundColor: Colors.black87,
-                                labelStyle: const TextStyle(
-                                  color: Colors.white,
-                                ),
-                                avatar: const Icon(
-                                  Icons.place,
-                                  color: Colors.white,
-                                  size: 18,
-                                ),
-                              ),
-                            Chip(
-                              label: Text('Claridad: ${widget.dream.clarity}'),
-                              backgroundColor: Colors.deepPurple.shade900,
-                              labelStyle: const TextStyle(color: Colors.white),
-                              avatar: const Icon(
-                                Icons.visibility,
-                                color: Colors.white,
-                                size: 18,
-                              ),
-                            ),
-                            if (widget.dream.notes != null &&
-                                widget.dream.notes!.isNotEmpty)
-                              Chip(
-                                label: Text('Notas: ${widget.dream.notes}'),
-                                backgroundColor: Colors.blueGrey.shade700,
-                                labelStyle: const TextStyle(
-                                  color: Colors.white,
-                                ),
-                                avatar: const Icon(
-                                  Icons.note,
-                                  color: Colors.white,
-                                  size: 18,
-                                ),
-                              ),
-                            Chip(
-                              label: Text(
-                                '¿Recurrente?: ${widget.dream.isRecurring ? "Sí" : "No"}',
-                              ),
-                              backgroundColor: Colors.purple.shade900,
-                              labelStyle: const TextStyle(color: Colors.white),
-                              avatar: const Icon(
-                                Icons.repeat,
-                                color: Colors.white,
-                                size: 18,
-                              ),
-                            ),
-                            Chip(
-                              label: Text(
-                                '¿Despertó?: ${widget.dream.wokeUp ? "Sí" : "No"}',
-                              ),
-                              backgroundColor: Colors.indigo.shade900,
-                              labelStyle: const TextStyle(color: Colors.white),
-                              avatar: const Icon(
-                                Icons.alarm,
-                                color: Colors.white,
-                                size: 18,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 28),
+                        _buildDreamInfoChips(),
+                        const SizedBox(height: 36),
                         if (widget.dream.dreamInfo != null &&
                             widget.dream.dreamInfo!.isNotEmpty)
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Sueño',
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 18,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                widget.dream.dreamInfo!,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  height: 1.5,
-                                ),
-                              ),
-                            ],
-                          ),
+                          _buildDreamDescription(),
                         const SizedBox(height: 32),
                         // Comentarios
                         if (_comments.isNotEmpty)
@@ -998,5 +1084,56 @@ class _ForumDreamDetailPageState extends State<ForumDreamDetailPage>
     } else {
       return date.toLocal().toString().split(' ')[0];
     }
+  }
+}
+
+/// Custom widget for dream info chips
+class _DreamInfoChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  const _DreamInfoChip({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [color, color.withValues(alpha: 0.7)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.4),
+            blurRadius: 12,
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.white, size: 16),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

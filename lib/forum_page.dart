@@ -15,7 +15,8 @@ class ForumPage extends StatefulWidget {
   State<ForumPage> createState() => _ForumPageState();
 }
 
-class _ForumPageState extends State<ForumPage> with TickerProviderStateMixin {
+class _ForumPageState extends State<ForumPage>
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   late AnimationController _controller;
   late List<Star> _stars;
   Size _lastSize = Size.zero;
@@ -27,10 +28,12 @@ class _ForumPageState extends State<ForumPage> with TickerProviderStateMixin {
   final Map<String, bool> _likedPosts = {};
   final Map<String, int> _likeCount = {};
   final Set<String> _processingLikes = {};
+  AppLifecycleState? _lastLifecycleState;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 20),
@@ -42,8 +45,25 @@ class _ForumPageState extends State<ForumPage> with TickerProviderStateMixin {
     _initializeData();
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed &&
+        _lastLifecycleState != AppLifecycleState.resumed) {
+      // La app volvió al foreground, recarga los posts
+      if (mounted) {
+        _fetchForumPosts();
+      }
+    }
+    _lastLifecycleState = state;
+  }
+
   Future<void> _initializeData() async {
     await _loadUserData();
+    // Limpiar posts anteriores para forzar recarga
+    _forumPosts.clear();
+    _filteredPosts.clear();
+    _likedPosts.clear();
+    _likeCount.clear();
     await _fetchForumPosts();
   }
 
@@ -339,6 +359,7 @@ class _ForumPageState extends State<ForumPage> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _controller.dispose();
     super.dispose();
   }
@@ -359,399 +380,411 @@ class _ForumPageState extends State<ForumPage> with TickerProviderStateMixin {
             size: size,
             painter: StarBackgroundPainter(stars: _stars, repaint: _controller),
           ),
-          SingleChildScrollView(
-            child: Column(
-              children: [
-                Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF8e2de2), Color(0xFF2193b0)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+          RefreshIndicator(
+            onRefresh: _fetchForumPosts,
+            color: const Color(0xFF8e2de2),
+            backgroundColor: Colors.black,
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF8e2de2), Color(0xFF2193b0)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: const BorderRadius.only(
+                        bottomLeft: Radius.circular(24),
+                        bottomRight: Radius.circular(24),
+                      ),
                     ),
-                    borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(24),
-                      bottomRight: Radius.circular(24),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 32,
+                      horizontal: 24,
                     ),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 32,
-                    horizontal: 24,
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.forum,
-                            color: Colors.white,
-                            size: 32,
-                          ),
-                          const SizedBox(width: 12),
-                          const Text(
-                            'Foro de Sueños',
-                            style: TextStyle(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.forum,
                               color: Colors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
+                              size: 32,
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Comparte y descubre experiencias oníificas',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.9),
-                          fontSize: 14,
+                            const SizedBox(width: 12),
+                            const Text(
+                              'Foro de Sueños',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                if (_isLoading)
-                  const Padding(
-                    padding: EdgeInsets.all(24.0),
-                    child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        Color(0xFF8e2de2),
-                      ),
-                    ),
-                  )
-                else if (_filteredPosts.isEmpty)
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24.0),
-                      child: ShaderMask(
-                        shaderCallback: (Rect bounds) {
-                          return const LinearGradient(
-                            colors: [
-                              Color.fromARGB(255, 80, 77, 77),
-                              Color(0xFF2193b0),
-                              Color(0xFF8e2de2),
-                            ],
-                            stops: [0.0, 0.6, 1.0],
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
-                          ).createShader(bounds);
-                        },
-                        child: const Text(
-                          'Aún no hay sueños compartidos en el foro.',
+                        const SizedBox(height: 8),
+                        Text(
+                          'Comparte y descubre experiencias oníificas',
                           style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: Colors.white.withValues(alpha: 0.9),
+                            fontSize: 14,
                           ),
                           textAlign: TextAlign.center,
                         ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  if (_isLoading)
+                    const Padding(
+                      padding: EdgeInsets.all(24.0),
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Color(0xFF8e2de2),
+                        ),
                       ),
-                    ),
-                  )
-                else
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    padding: const EdgeInsets.only(
-                      top: 8,
-                      left: 16,
-                      right: 16,
-                      bottom: 16,
-                    ),
-                    itemCount: _filteredPosts.length,
-                    itemBuilder: (context, index) {
-                      final post = _filteredPosts[index];
-                      return GestureDetector(
-                        onTap: () {
-                          final dream = Dream.fromJson(post);
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  ForumDreamDetailPage(dream: dream),
+                    )
+                  else if (_filteredPosts.isEmpty)
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: ShaderMask(
+                          shaderCallback: (Rect bounds) {
+                            return const LinearGradient(
+                              colors: [
+                                Color.fromARGB(255, 80, 77, 77),
+                                Color(0xFF2193b0),
+                                Color(0xFF8e2de2),
+                              ],
+                              stops: [0.0, 0.6, 1.0],
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                            ).createShader(bounds);
+                          },
+                          child: const Text(
+                            'Aún no hay sueños compartidos en el foro.',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
                             ),
-                          );
-                        },
-                        child: Center(
-                          child: Container(
-                            constraints: const BoxConstraints(maxWidth: 900),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(28),
-                              gradient: LinearGradient(
-                                colors: [
-                                  Color.fromARGB(
-                                    77,
-                                    (Colors.deepPurple.shade900.r * 255.0)
-                                        .round()
-                                        .clamp(0, 255),
-                                    (Colors.deepPurple.shade900.g * 255.0)
-                                        .round()
-                                        .clamp(0, 255),
-                                    (Colors.deepPurple.shade900.b * 255.0)
-                                        .round()
-                                        .clamp(0, 255),
-                                  ),
-                                  Color.fromARGB(
-                                    77,
-                                    (Colors.blue.shade900.r * 255.0)
-                                        .round()
-                                        .clamp(0, 255),
-                                    (Colors.blue.shade900.g * 255.0)
-                                        .round()
-                                        .clamp(0, 255),
-                                    (Colors.blue.shade900.b * 255.0)
-                                        .round()
-                                        .clamp(0, 255),
-                                  ),
-                                  Color.fromARGB(
-                                    26,
-                                    (Colors.black.r * 255.0).round().clamp(
-                                      0,
-                                      255,
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      padding: const EdgeInsets.only(
+                        top: 8,
+                        left: 16,
+                        right: 16,
+                        bottom: 16,
+                      ),
+                      itemCount: _filteredPosts.length,
+                      itemBuilder: (context, index) {
+                        final post = _filteredPosts[index];
+                        return GestureDetector(
+                          onTap: () async {
+                            final dream = Dream.fromJson(post);
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    ForumDreamDetailPage(dream: dream),
+                              ),
+                            );
+                            // Recarga los posts al volver de ForumDreamDetailPage
+                            if (mounted) {
+                              _fetchForumPosts();
+                            }
+                          },
+                          child: Center(
+                            child: Container(
+                              constraints: const BoxConstraints(maxWidth: 900),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(28),
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Color.fromARGB(
+                                      77,
+                                      (Colors.deepPurple.shade900.r * 255.0)
+                                          .round()
+                                          .clamp(0, 255),
+                                      (Colors.deepPurple.shade900.g * 255.0)
+                                          .round()
+                                          .clamp(0, 255),
+                                      (Colors.deepPurple.shade900.b * 255.0)
+                                          .round()
+                                          .clamp(0, 255),
                                     ),
-                                    (Colors.black.g * 255.0).round().clamp(
-                                      0,
-                                      255,
+                                    Color.fromARGB(
+                                      77,
+                                      (Colors.blue.shade900.r * 255.0)
+                                          .round()
+                                          .clamp(0, 255),
+                                      (Colors.blue.shade900.g * 255.0)
+                                          .round()
+                                          .clamp(0, 255),
+                                      (Colors.blue.shade900.b * 255.0)
+                                          .round()
+                                          .clamp(0, 255),
                                     ),
-                                    (Colors.black.b * 255.0).round().clamp(
-                                      0,
-                                      255,
+                                    Color.fromARGB(
+                                      26,
+                                      (Colors.black.r * 255.0).round().clamp(
+                                        0,
+                                        255,
+                                      ),
+                                      (Colors.black.g * 255.0).round().clamp(
+                                        0,
+                                        255,
+                                      ),
+                                      (Colors.black.b * 255.0).round().clamp(
+                                        0,
+                                        255,
+                                      ),
                                     ),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.deepPurple.withAlpha(30),
+                                    blurRadius: 32,
+                                    offset: const Offset(0, 16),
                                   ),
                                 ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
+                                border: Border.all(
+                                  color: Colors.deepPurpleAccent.withAlpha(60),
+                                  width: 2.5,
+                                ),
                               ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.deepPurple.withAlpha(30),
-                                  blurRadius: 32,
-                                  offset: const Offset(0, 16),
-                                ),
-                              ],
-                              border: Border.all(
-                                color: Colors.deepPurpleAccent.withAlpha(60),
-                                width: 2.5,
+                              margin: const EdgeInsets.symmetric(
+                                vertical: 18,
+                                horizontal: 12,
                               ),
-                            ),
-                            margin: const EdgeInsets.symmetric(
-                              vertical: 18,
-                              horizontal: 12,
-                            ),
-                            padding: const EdgeInsets.only(
-                              top: 24,
-                              left: 24,
-                              right: 24,
-                              bottom: 12,
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    GestureDetector(
-                                      onTap: () {
-                                        final userId = post['userId'] is Map
-                                            ? (post['userId'] as Map)['_id']
-                                            : post['userId'];
-                                        final username = post['userId'] is Map
-                                            ? (post['userId']
-                                                  as Map)['username']
-                                            : 'Usuario';
-                                        Navigator.pushNamed(
-                                          context,
-                                          '/user_profile',
-                                          arguments: {
-                                            'userId': userId,
-                                            'username': username,
-                                          },
-                                        );
-                                      },
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          gradient: const LinearGradient(
-                                            colors: [
-                                              Colors.deepPurpleAccent,
-                                              Colors.blueAccent,
-                                            ],
-                                          ),
-                                        ),
-                                        padding: const EdgeInsets.all(6),
-                                        child: const Icon(
-                                          Icons.star,
-                                          color: Colors.white,
-                                          size: 22,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 18),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(
-                                            post['userId']?['username'] ??
-                                                'Anónimo',
-                                            style: const TextStyle(
-                                              color: Colors.white70,
-                                              fontWeight: FontWeight.w500,
-                                              fontSize: 12,
-                                              letterSpacing: 0.5,
+                              padding: const EdgeInsets.only(
+                                top: 24,
+                                left: 24,
+                                right: 24,
+                                bottom: 12,
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      GestureDetector(
+                                        onTap: () {
+                                          final userId = post['userId'] is Map
+                                              ? (post['userId'] as Map)['_id']
+                                              : post['userId'];
+                                          final username = post['userId'] is Map
+                                              ? (post['userId']
+                                                    as Map)['username']
+                                              : 'Usuario';
+                                          Navigator.pushNamed(
+                                            context,
+                                            '/user_profile',
+                                            arguments: {
+                                              'userId': userId,
+                                              'username': username,
+                                            },
+                                          );
+                                        },
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            gradient: const LinearGradient(
+                                              colors: [
+                                                Colors.deepPurpleAccent,
+                                                Colors.blueAccent,
+                                              ],
                                             ),
-                                            overflow: TextOverflow.ellipsis,
                                           ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            post['title'] ?? 'Sin título',
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16,
-                                              letterSpacing: 1.1,
-                                            ),
-                                            overflow: TextOverflow.ellipsis,
+                                          padding: const EdgeInsets.all(6),
+                                          child: const Icon(
+                                            Icons.star,
+                                            color: Colors.white,
+                                            size: 22,
                                           ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 18),
-                                Wrap(
-                                  spacing: 8,
-                                  runSpacing: 4,
-                                  children: [
-                                    if (post['mood'] != null)
-                                      Chip(
-                                        label: Text(post['mood'] ?? ''),
-                                        backgroundColor: Colors.blue.shade700,
-                                        labelStyle: const TextStyle(
-                                          color: Colors.white,
-                                        ),
-                                        avatar: const Icon(
-                                          Icons.emoji_emotions,
-                                          color: Colors.white,
-                                          size: 18,
                                         ),
                                       ),
-                                    if (post['date'] != null)
-                                      Chip(
-                                        label: Text(
-                                          DateTime.parse(
-                                            post['date'],
-                                          ).toLocal().toString().split(' ')[0],
-                                        ),
-                                        backgroundColor:
-                                            Colors.deepPurple.shade700,
-                                        labelStyle: const TextStyle(
-                                          color: Colors.white,
-                                        ),
-                                        avatar: const Icon(
-                                          Icons.calendar_today,
-                                          color: Colors.white,
-                                          size: 18,
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  spacing: 32,
-                                  children: [
-                                    Opacity(
-                                      opacity:
-                                          _processingLikes.contains(post['_id'])
-                                          ? 0.5
-                                          : 1.0,
-                                      child: GestureDetector(
-                                        onTap:
-                                            _processingLikes.contains(
-                                              post['_id'],
-                                            )
-                                            ? null
-                                            : () {
-                                                final postId =
-                                                    post['_id'] ?? 'unknown';
-                                                final isCurrentlyLiked =
-                                                    _likedPosts[postId] ??
-                                                    false;
-                                                setState(() {
-                                                  _likedPosts[postId] =
-                                                      !(_likedPosts[postId] ??
-                                                          false);
-                                                });
-                                                _toggleLike(
-                                                  postId,
-                                                  isCurrentlyLiked,
-                                                );
-                                              },
+                                      const SizedBox(width: 18),
+                                      Expanded(
                                         child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            SizedBox(
-                                              width: 30,
-                                              height: 30,
-                                              child: CustomPaint(
-                                                painter: CrescentMoonPainter(
-                                                  isLiked:
-                                                      _likedPosts[post['_id'] ??
-                                                          'unknown'] ??
-                                                      false,
-                                                ),
-                                              ),
-                                            ),
-                                            const SizedBox(height: 8),
                                             Text(
-                                              '${_likeCount[post['_id'] ?? 'unknown'] ?? 0}',
+                                              post['userId']?['username'] ??
+                                                  'Anónimo',
                                               style: const TextStyle(
                                                 color: Colors.white70,
-                                                fontSize: 14,
                                                 fontWeight: FontWeight.w500,
+                                                fontSize: 12,
+                                                letterSpacing: 0.5,
                                               ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              post['title'] ?? 'Sin título',
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                                letterSpacing: 1.1,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
                                             ),
                                           ],
                                         ),
                                       ),
-                                    ),
-                                    Column(
-                                      children: [
-                                        Icon(
-                                          Icons.comment_outlined,
-                                          color: Colors.white70,
-                                          size: 24,
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          '${(post['comments'] as List?)?.length ?? 0}',
-                                          style: const TextStyle(
-                                            color: Colors.white70,
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w500,
+                                    ],
+                                  ),
+                                  const SizedBox(height: 18),
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 4,
+                                    children: [
+                                      if (post['mood'] != null)
+                                        Chip(
+                                          label: Text(post['mood'] ?? ''),
+                                          backgroundColor: Colors.blue.shade700,
+                                          labelStyle: const TextStyle(
+                                            color: Colors.white,
+                                          ),
+                                          avatar: const Icon(
+                                            Icons.emoji_emotions,
+                                            color: Colors.white,
+                                            size: 18,
                                           ),
                                         ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ],
+                                      if (post['date'] != null)
+                                        Chip(
+                                          label: Text(
+                                            DateTime.parse(post['date'])
+                                                .toLocal()
+                                                .toString()
+                                                .split(' ')[0],
+                                          ),
+                                          backgroundColor:
+                                              Colors.deepPurple.shade700,
+                                          labelStyle: const TextStyle(
+                                            color: Colors.white,
+                                          ),
+                                          avatar: const Icon(
+                                            Icons.calendar_today,
+                                            color: Colors.white,
+                                            size: 18,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    spacing: 32,
+                                    children: [
+                                      Opacity(
+                                        opacity:
+                                            _processingLikes.contains(
+                                              post['_id'],
+                                            )
+                                            ? 0.5
+                                            : 1.0,
+                                        child: GestureDetector(
+                                          onTap:
+                                              _processingLikes.contains(
+                                                post['_id'],
+                                              )
+                                              ? null
+                                              : () {
+                                                  final postId =
+                                                      post['_id'] ?? 'unknown';
+                                                  final isCurrentlyLiked =
+                                                      _likedPosts[postId] ??
+                                                      false;
+                                                  setState(() {
+                                                    _likedPosts[postId] =
+                                                        !(_likedPosts[postId] ??
+                                                            false);
+                                                  });
+                                                  _toggleLike(
+                                                    postId,
+                                                    isCurrentlyLiked,
+                                                  );
+                                                },
+                                          child: Column(
+                                            children: [
+                                              SizedBox(
+                                                width: 30,
+                                                height: 30,
+                                                child: CustomPaint(
+                                                  painter: CrescentMoonPainter(
+                                                    isLiked:
+                                                        _likedPosts[post['_id'] ??
+                                                            'unknown'] ??
+                                                        false,
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Text(
+                                                '${_likeCount[post['_id'] ?? 'unknown'] ?? 0}',
+                                                style: const TextStyle(
+                                                  color: Colors.white70,
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      Column(
+                                        children: [
+                                          Icon(
+                                            Icons.comment_outlined,
+                                            color: Colors.white70,
+                                            size: 24,
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            '${(post['comments'] as List?)?.length ?? 0}',
+                                            style: const TextStyle(
+                                              color: Colors.white70,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                const SizedBox(height: 32),
-              ],
+                        );
+                      },
+                    ),
+                  const SizedBox(height: 32),
+                ],
+              ),
             ),
           ),
         ],

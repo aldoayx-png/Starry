@@ -6,6 +6,9 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'token_storage.dart';
 
+// Constants
+const String _baseUrl = 'https://starry-1zm8.onrender.com/api/dreams';
+
 class DreamDetailPage extends StatefulWidget {
   final Dream dream;
   const DreamDetailPage({super.key, required this.dream});
@@ -62,6 +65,511 @@ class _DreamDetailPageState extends State<DreamDetailPage>
     super.dispose();
   }
 
+  /// Builds the dream info chips section with better organization
+  Widget _buildDreamInfoChips() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Detalles del Sueño',
+          style: TextStyle(
+            color: Colors.white70,
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 14),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            if (widget.dream.mood != null)
+              _DreamInfoChip(
+                icon: _getMoodIcon(widget.dream.mood!),
+                label: widget.dream.mood!,
+                color: _getMoodColor(widget.dream.mood!),
+              ),
+            if (widget.dream.date != null)
+              _DreamInfoChip(
+                icon: Icons.calendar_today,
+                label: widget.dream.date!.toLocal().toString().split(' ')[0],
+                color: Colors.deepPurple.shade700,
+              ),
+            if (widget.dream.people != null && widget.dream.people!.isNotEmpty)
+              _DreamInfoChip(
+                icon: Icons.people,
+                label: widget.dream.people!,
+                color: Colors.indigo.shade700,
+              ),
+            if (widget.dream.place != null && widget.dream.place!.isNotEmpty)
+              _DreamInfoChip(
+                icon: Icons.location_on,
+                label: widget.dream.place!,
+                color: Colors.red.shade700,
+              ),
+            _DreamInfoChip(
+              icon: Icons.visibility,
+              label: widget.dream.clarity.round().toString(),
+              color: const Color(0xFF10B981),
+            ),
+            _DreamInfoChip(
+              icon: Icons.repeat,
+              label: widget.dream.isRecurring ? 'Recurrente' : 'Única',
+              color: Colors.purple.shade900,
+            ),
+            _DreamInfoChip(
+              icon: Icons.alarm,
+              label: widget.dream.wokeUp ? 'Despertó' : 'Continuó',
+              color: Colors.indigo.shade900,
+            ),
+            ...widget.dream.tags.map(
+              (tag) => _DreamInfoChip(
+                icon: _getTagIcon(tag),
+                label: tag,
+                color: _getTagColor(tag),
+              ),
+            ),
+          ],
+        ),
+        if (widget.dream.notes != null && widget.dream.notes!.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: Colors.blueGrey.shade900.withValues(alpha: 0.4),
+              border: Border.all(
+                color: Colors.blueGrey.shade700.withValues(alpha: 0.5),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.note, color: Colors.blueGrey, size: 18),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    widget.dream.notes!,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 13,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  /// Builds the dream description section
+  Widget _buildDreamDescription() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Descripción del Sueño',
+          style: TextStyle(
+            color: Colors.white70,
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            gradient: LinearGradient(
+              colors: [Colors.black87, Colors.black.withValues(alpha: 0.7)],
+            ),
+            border: Border.all(color: Colors.white10, width: 1),
+          ),
+          child: Text(
+            widget.dream.dreamInfo!,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 15,
+              height: 1.6,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Handles dream editing
+  Future<void> _handleEditDream() async {
+    final editedDream = await showDialog<Dream>(
+      context: context,
+      builder: (context) => DreamFormDialog(
+        initialDream: widget.dream,
+        onSave: (dream) {
+          Navigator.of(context).pop(dream);
+        },
+      ),
+    );
+
+    if (editedDream != null) {
+      try {
+        await _updateDreamOnBackend(editedDream);
+      } catch (e) {
+        if (mounted) {
+          _showErrorSnackBar('Error inesperado al editar');
+        }
+      }
+    }
+  }
+
+  /// Updates dream on backend and updates local state
+  Future<void> _updateDreamOnBackend(Dream editedDream) async {
+    try {
+      final token = await TokenStorage.getToken();
+      final response = await http.put(
+        Uri.parse('$_baseUrl/${widget.dream.id}'),
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'title': editedDream.title,
+          'date': editedDream.date?.toIso8601String(),
+          'mood': editedDream.mood,
+          'tags': editedDream.tags,
+          'people': editedDream.people,
+          'place': editedDream.place,
+          'clarity': editedDream.clarity,
+          'notes': editedDream.notes,
+          'isRecurring': editedDream.isRecurring,
+          'wokeUp': editedDream.wokeUp,
+          'dreamInfo': editedDream.dreamInfo,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final updatedDream = Dream.fromJson(jsonDecode(response.body));
+        setState(() {
+          widget.dream.title = updatedDream.title;
+          widget.dream.date = updatedDream.date;
+          widget.dream.mood = updatedDream.mood;
+          widget.dream.tags = updatedDream.tags;
+          widget.dream.people = updatedDream.people;
+          widget.dream.place = updatedDream.place;
+          widget.dream.clarity = updatedDream.clarity;
+          widget.dream.notes = updatedDream.notes;
+          widget.dream.isRecurring = updatedDream.isRecurring;
+          widget.dream.wokeUp = updatedDream.wokeUp;
+          widget.dream.dreamInfo = updatedDream.dreamInfo;
+        });
+
+        if (mounted) {
+          Navigator.of(context).pop({'edited': true, 'dream': widget.dream});
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Sueño actualizado correctamente'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      } else if (response.statusCode == 401) {
+        await TokenStorage.clearToken();
+        if (mounted) {
+          Navigator.of(
+            context,
+          ).pushNamedAndRemoveUntil('/login', (Route<dynamic> route) => false);
+        }
+      } else {
+        _showErrorSnackBar('Error al editar en el servidor');
+      }
+    } catch (e) {
+      _showErrorSnackBar('Error de conexión al editar');
+    }
+  }
+
+  /// Handles dream deletion
+  Future<void> _handleDeleteDream() async {
+    final confirm = await _showDeleteConfirmDialog();
+    if (confirm == true) {
+      try {
+        await _deleteDreamOnBackend();
+      } catch (e) {
+        if (mounted) {
+          _showErrorSnackBar('Error inesperado al eliminar');
+        }
+      }
+    }
+  }
+
+  /// Shows delete confirmation dialog
+  Future<bool?> _showDeleteConfirmDialog() async {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF000000), Color(0xFF1a1a1a)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFFd32f2f), width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFd32f2f).withValues(alpha: 0.3),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(24),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFd32f2f).withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.warning_amber_rounded,
+                        color: Color(0xFFd32f2f),
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'Eliminar sueño',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFd32f2f).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: const Color(0xFFd32f2f).withValues(alpha: 0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: const Text(
+                    '⚠️ Esta acción es irreversible. Este sueño se eliminará permanentemente.',
+                    style: TextStyle(
+                      color: Color(0xFFffb3b3),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      height: 1.5,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
+                      ),
+                      child: const Text(
+                        'Cancelar',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFd32f2f),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'Eliminar',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Deletes dream from backend
+  Future<void> _deleteDreamOnBackend() async {
+    try {
+      final token = await TokenStorage.getToken();
+      final response = await http.delete(
+        Uri.parse('$_baseUrl/${widget.dream.id}'),
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        if (mounted) {
+          Navigator.of(context).pop({'deleted': true, 'dream': widget.dream});
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Sueño eliminado correctamente'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      } else if (response.statusCode == 401) {
+        await TokenStorage.clearToken();
+        if (mounted) {
+          Navigator.of(
+            context,
+          ).pushNamedAndRemoveUntil('/login', (Route<dynamic> route) => false);
+        }
+      } else {
+        _showErrorSnackBar('Error al eliminar el sueño');
+      }
+    } catch (e) {
+      _showErrorSnackBar('Error de conexión al eliminar');
+    }
+  }
+
+  /// Shows error snack bar
+  void _showErrorSnackBar(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.red.shade900,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  /// Gets the appropriate icon for a tag
+  IconData _getTagIcon(String tag) {
+    switch (tag) {
+      case 'Lúcido':
+        return Icons.lightbulb;
+      case 'Pesadilla':
+        return Icons.warning;
+      case 'Recurrente':
+        return Icons.repeat;
+      case 'Normal':
+        return Icons.nightlight_round;
+      case 'Colorido':
+        return Icons.palette;
+      case 'Corto':
+        return Icons.timer;
+      case 'Largo':
+        return Icons.hourglass_bottom;
+      default:
+        return Icons.label;
+    }
+  }
+
+  /// Gets the appropriate icon for a mood
+  IconData _getMoodIcon(String moodType) {
+    switch (moodType) {
+      case 'Feliz':
+        return Icons.emoji_emotions;
+      case 'Triste':
+        return Icons.sentiment_dissatisfied;
+      case 'Ansioso':
+        return Icons.sentiment_neutral;
+      case 'Asustado':
+        return Icons.sentiment_very_dissatisfied;
+      case 'Neutral':
+        return Icons.sentiment_satisfied;
+      default:
+        return Icons.mood;
+    }
+  }
+
+  /// Gets the appropriate color for a mood
+  Color _getMoodColor(String moodType) {
+    switch (moodType) {
+      case 'Feliz':
+        return Colors.greenAccent;
+      case 'Triste':
+        return Colors.blueAccent;
+      case 'Ansioso':
+        return Colors.orangeAccent;
+      case 'Asustado':
+        return Colors.redAccent;
+      case 'Neutral':
+        return Colors.grey;
+      default:
+        return Colors.white24;
+    }
+  }
+
+  /// Gets the appropriate color for a tag
+  Color _getTagColor(String tag) {
+    switch (tag) {
+      case 'Lúcido':
+        return Colors.amber.shade700;
+      case 'Pesadilla':
+        return Colors.red.shade700;
+      case 'Recurrente':
+        return Colors.purple.shade700;
+      case 'Normal':
+        return Colors.indigo.shade700;
+      case 'Colorido':
+        return Colors.pink.shade700;
+      case 'Corto':
+        return Colors.cyan.shade700;
+      case 'Largo':
+        return Colors.blue.shade700;
+      default:
+        return Colors.purple.shade700;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -88,287 +596,40 @@ class _DreamDetailPageState extends State<DreamDetailPage>
         actions: [
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert, color: Colors.white),
-            color: Colors.black.withValues(alpha: 0.7),
-            onSelected: (value) async {
+            color: Colors.black.withValues(alpha: 0.85),
+            surfaceTintColor: Colors.transparent,
+            onSelected: (value) {
               if (value == 'edit') {
-                final editedDream = await showDialog<Dream>(
-                  context: context,
-                  builder: (context) => DreamFormDialog(
-                    initialDream: widget.dream,
-                    onSave: (dream) {
-                      Navigator.of(context).pop(dream);
-                    },
-                  ),
-                );
-                if (editedDream != null) {
-                  try {
-                    final token = await TokenStorage.getToken();
-                    final response = await http.put(
-                      Uri.parse(
-                        'https://starry-1zm8.onrender.com/api/dreams/${widget.dream.id}',
-                      ),
-                      headers: {
-                        'Content-Type': 'application/json',
-                        if (token != null) 'Authorization': 'Bearer $token',
-                      },
-                      body: jsonEncode({
-                        'title': editedDream.title,
-                        'date': editedDream.date?.toIso8601String(),
-                        'mood': editedDream.mood,
-                        'tags': editedDream.tags,
-                        'people': editedDream.people,
-                        'place': editedDream.place,
-                        'clarity': editedDream.clarity,
-                        'notes': editedDream.notes,
-                        'isRecurring': editedDream.isRecurring,
-                        'wokeUp': editedDream.wokeUp,
-                        'dreamInfo': editedDream.dreamInfo,
-                      }),
-                    );
-                    if (response.statusCode == 200) {
-                      final updatedDream = Dream.fromJson(
-                        jsonDecode(response.body),
-                      );
-                      setState(() {
-                        widget.dream.title = updatedDream.title;
-                        widget.dream.date = updatedDream.date;
-                        widget.dream.mood = updatedDream.mood;
-                        widget.dream.tags = updatedDream.tags;
-                        widget.dream.people = updatedDream.people;
-                        widget.dream.place = updatedDream.place;
-                        widget.dream.clarity = updatedDream.clarity;
-                        widget.dream.notes = updatedDream.notes;
-                        widget.dream.isRecurring = updatedDream.isRecurring;
-                        widget.dream.wokeUp = updatedDream.wokeUp;
-                        widget.dream.dreamInfo = updatedDream.dreamInfo;
-                      });
-                      // Devuelve el sueño editado a la pantalla anterior para actualizar la lista
-                      Navigator.of(
-                        context,
-                      ).pop({'edited': true, 'dream': widget.dream});
-                      // Si quieres mostrar el SnackBar, hazlo en la pantalla anterior después de actualizar la lista
-                    } else if (response.statusCode == 401) {
-                      // Token inválido o expirado
-                      await TokenStorage.clearToken();
-                      if (mounted) {
-                        Navigator.of(context).pushNamedAndRemoveUntil(
-                          '/login',
-                          (Route<dynamic> route) => false,
-                        );
-                      }
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Error al editar en el backend'),
-                        ),
-                      );
-                    }
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Error de red al editar')),
-                    );
-                  }
-                }
+                _handleEditDream();
               } else if (value == 'delete') {
-                final confirm = await showDialog<bool>(
-                  context: context,
-                  builder: (context) => Dialog(
-                    backgroundColor: Colors.transparent,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF000000), Color(0xFF1a1a1a)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: const Color(0xFFd32f2f),
-                          width: 1.5,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(
-                              0xFFd32f2f,
-                            ).withValues(alpha: 0.3),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      padding: const EdgeInsets.all(24),
-                      child: SingleChildScrollView(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: const Color(
-                                      0xFFd32f2f,
-                                    ).withValues(alpha: 0.2),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: const Icon(
-                                    Icons.warning_amber_rounded,
-                                    color: Color(0xFFd32f2f),
-                                    size: 24,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                const Expanded(
-                                  child: Text(
-                                    'Eliminar sueño',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 0.5,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: const Color(
-                                  0xFFd32f2f,
-                                ).withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: const Color(
-                                    0xFFd32f2f,
-                                  ).withValues(alpha: 0.3),
-                                  width: 1,
-                                ),
-                              ),
-                              child: const Text(
-                                '⚠️ Esta acción es irreversible. Este sueño se eliminará permanentemente.',
-                                style: TextStyle(
-                                  color: Color(0xFFffb3b3),
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                  height: 1.5,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                TextButton(
-                                  onPressed: () =>
-                                      Navigator.of(context).pop(false),
-                                  style: TextButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 20,
-                                      vertical: 12,
-                                    ),
-                                  ),
-                                  child: const Text(
-                                    'Cancelar',
-                                    style: TextStyle(
-                                      color: Colors.white70,
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                ElevatedButton(
-                                  onPressed: () =>
-                                      Navigator.of(context).pop(true),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFFd32f2f),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 20,
-                                      vertical: 12,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    elevation: 0,
-                                  ),
-                                  child: const Text(
-                                    'Eliminar',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-                if (confirm == true) {
-                  // Llamada DELETE al backend usando el id
-                  try {
-                    final token = await TokenStorage.getToken();
-                    final response = await http.delete(
-                      Uri.parse(
-                        'https://starry-1zm8.onrender.com/api/dreams/${widget.dream.id}',
-                      ),
-                      headers: {
-                        'Content-Type': 'application/json',
-                        if (token != null) 'Authorization': 'Bearer $token',
-                      },
-                    );
-                    if (response.statusCode == 200) {
-                      Navigator.of(
-                        context,
-                      ).pop({'deleted': true, 'dream': widget.dream});
-                    } else if (response.statusCode == 401) {
-                      // Token inválido o expirado
-                      await TokenStorage.clearToken();
-                      if (mounted) {
-                        Navigator.of(context).pushNamedAndRemoveUntil(
-                          '/login',
-                          (Route<dynamic> route) => false,
-                        );
-                      }
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Error al eliminar en el backend'),
-                        ),
-                      );
-                    }
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Error de red al eliminar')),
-                    );
-                  }
-                }
+                _handleDeleteDream();
               }
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'edit',
-                child: ListTile(
-                  leading: Icon(Icons.edit, color: Colors.white70),
-                  title: Text('Editar', style: TextStyle(color: Colors.white)),
+                child: Row(
+                  children: [
+                    const Icon(Icons.edit, color: Colors.white70, size: 20),
+                    const SizedBox(width: 12),
+                    const Text(
+                      'Editar',
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ],
                 ),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'delete',
-                child: ListTile(
-                  leading: Icon(Icons.delete, color: Colors.redAccent),
-                  title: Text(
-                    'Eliminar',
-                    style: TextStyle(color: Colors.redAccent),
-                  ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.delete, color: Colors.redAccent, size: 20),
+                    const SizedBox(width: 12),
+                    const Text(
+                      'Eliminar',
+                      style: TextStyle(color: Colors.redAccent, fontSize: 14),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -392,227 +653,69 @@ class _DreamDetailPageState extends State<DreamDetailPage>
       ),
       body: Stack(
         children: [
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Color.fromARGB(
-                      77,
-                      (Colors.deepPurple.shade900.r * 255.0).round().clamp(
-                        0,
-                        255,
-                      ),
-                      (Colors.deepPurple.shade900.g * 255.0).round().clamp(
-                        0,
-                        255,
-                      ),
-                      (Colors.deepPurple.shade900.b * 255.0).round().clamp(
-                        0,
-                        255,
-                      ),
-                    ),
-                    Color.fromARGB(
-                      77,
-                      (Colors.blue.shade900.r * 255.0).round().clamp(0, 255),
-                      (Colors.blue.shade900.g * 255.0).round().clamp(0, 255),
-                      (Colors.blue.shade900.b * 255.0).round().clamp(0, 255),
-                    ),
-                    Color.fromARGB(
-                      26,
-                      (Colors.black.r * 255.0).round().clamp(0, 255),
-                      (Colors.black.g * 255.0).round().clamp(0, 255),
-                      (Colors.black.b * 255.0).round().clamp(0, 255),
-                    ),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-            ),
-          ),
           CustomPaint(
             size: size,
             painter: StarBackgroundPainter(stars: _stars, repaint: _controller),
           ),
           SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Dream Title with Icon
                   Row(
                     children: [
                       Container(
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          gradient: LinearGradient(
+                          gradient: const LinearGradient(
                             colors: [
                               Colors.deepPurpleAccent,
                               Colors.blueAccent,
                             ],
                           ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.blueAccent.withValues(alpha: 0.4),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
-                        padding: const EdgeInsets.all(8),
+                        padding: const EdgeInsets.all(10),
                         child: const Icon(
                           Icons.star,
                           color: Colors.white,
                           size: 28,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 16),
                       Expanded(
                         child: Text(
-                          widget.dream.title ?? '',
+                          widget.dream.title ?? 'Sin título',
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
-                            fontSize: 22,
+                            fontSize: 26,
+                            letterSpacing: 0.3,
                           ),
                           overflow: TextOverflow.ellipsis,
+                          maxLines: 2,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
-                  Wrap(
-                    spacing: 14,
-                    runSpacing: 8,
-                    children: [
-                      if (widget.dream.mood != null)
-                        Chip(
-                          label: Text('Ánimo: ${widget.dream.mood}'),
-                          backgroundColor: Colors.blue.shade700,
-                          labelStyle: const TextStyle(color: Colors.white),
-                          avatar: const Icon(
-                            Icons.emoji_emotions,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                        ),
-                      if (widget.dream.date != null)
-                        Chip(
-                          label: Text(
-                            'Fecha: ${widget.dream.date!.toLocal().toString().split(' ')[0]}',
-                          ),
-                          backgroundColor: Colors.deepPurple.shade700,
-                          labelStyle: const TextStyle(color: Colors.white),
-                          avatar: const Icon(
-                            Icons.calendar_today,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                        ),
-                      if (widget.dream.tags.isNotEmpty)
-                        ...widget.dream.tags.map(
-                          (tag) => Chip(
-                            label: Text(tag),
-                            backgroundColor: Colors.purple.shade700,
-                            labelStyle: const TextStyle(color: Colors.white),
-                            avatar: const Icon(
-                              Icons.label,
-                              color: Colors.white,
-                              size: 18,
-                            ),
-                          ),
-                        ),
-                      if (widget.dream.people != null &&
-                          widget.dream.people!.isNotEmpty)
-                        Chip(
-                          label: Text('Personas: ${widget.dream.people}'),
-                          backgroundColor: Colors.indigo.shade700,
-                          labelStyle: const TextStyle(color: Colors.white),
-                          avatar: const Icon(
-                            Icons.people,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                        ),
-                      if (widget.dream.place != null &&
-                          widget.dream.place!.isNotEmpty)
-                        Chip(
-                          label: Text('Lugar: ${widget.dream.place}'),
-                          backgroundColor: Colors.black87,
-                          labelStyle: const TextStyle(color: Colors.white),
-                          avatar: const Icon(
-                            Icons.place,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                        ),
-                      Chip(
-                        label: Text('Claridad: ${widget.dream.clarity}'),
-                        backgroundColor: Colors.deepPurple.shade900,
-                        labelStyle: const TextStyle(color: Colors.white),
-                        avatar: const Icon(
-                          Icons.visibility,
-                          color: Colors.white,
-                          size: 18,
-                        ),
-                      ),
-                      if (widget.dream.notes != null &&
-                          widget.dream.notes!.isNotEmpty)
-                        Chip(
-                          label: Text('Notas: ${widget.dream.notes}'),
-                          backgroundColor: Colors.blueGrey.shade700,
-                          labelStyle: const TextStyle(color: Colors.white),
-                          avatar: const Icon(
-                            Icons.note,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                        ),
-                      Chip(
-                        label: Text(
-                          '¿Recurrente?: ${widget.dream.isRecurring ? "Sí" : "No"}',
-                        ),
-                        backgroundColor: Colors.purple.shade900,
-                        labelStyle: const TextStyle(color: Colors.white),
-                        avatar: const Icon(
-                          Icons.repeat,
-                          color: Colors.white,
-                          size: 18,
-                        ),
-                      ),
-                      Chip(
-                        label: Text(
-                          '¿Despertó?: ${widget.dream.wokeUp ? "Sí" : "No"}',
-                        ),
-                        backgroundColor: Colors.indigo.shade900,
-                        labelStyle: const TextStyle(color: Colors.white),
-                        avatar: const Icon(
-                          Icons.alarm,
-                          color: Colors.white,
-                          size: 18,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 28),
+
+                  // Dream Info Chips
+                  _buildDreamInfoChips(),
+                  const SizedBox(height: 36),
+
+                  // Dream Description
                   if (widget.dream.dreamInfo != null &&
                       widget.dream.dreamInfo!.isNotEmpty)
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Sueño',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          widget.dream.dreamInfo!,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            height: 1.5,
-                          ),
-                        ),
-                      ],
-                    ),
+                    _buildDreamDescription(),
                 ],
               ),
             ),
@@ -720,6 +823,57 @@ class _DreamDetailPageState extends State<DreamDetailPage>
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Custom widget for dream info chips
+class _DreamInfoChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  const _DreamInfoChip({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [color, color.withValues(alpha: 0.7)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.4),
+            blurRadius: 12,
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.white, size: 16),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       ),
     );
   }
