@@ -205,88 +205,6 @@ class _DreamDetailPageState extends State<DreamDetailPage>
     );
   }
 
-  /// Syncs dream updates to forum post if shared
-  Future<void> _syncForumPost(String? token, Dream updatedDream) async {
-    if (token == null || widget.dream.id == null) {
-      debugPrint(
-        '⚠ No se puede sincronizar: token=${token != null}, dreamId=${widget.dream.id}',
-      );
-      return;
-    }
-
-    debugPrint(
-      '🔄 Iniciando sincronización de Forum Post para dreamId: ${widget.dream.id}',
-    );
-
-    final postData = jsonEncode({
-      'title': updatedDream.title,
-      'date': updatedDream.date?.toIso8601String(),
-      'mood': updatedDream.mood,
-      'tags': updatedDream.tags,
-      'people': updatedDream.people,
-      'place': updatedDream.place,
-      'clarity': updatedDream.clarity,
-      'notes': updatedDream.notes,
-      'isRecurring': updatedDream.isRecurring,
-      'wokeUp': updatedDream.wokeUp,
-      'dreamInfo': updatedDream.dreamInfo,
-    });
-
-    // Intentar endpoints en orden de preferencia
-    final endpoints = [
-      // Endpoint que busca el post por dreamId (recomendado)
-      'https://starry-1zm8.onrender.com/api/forum/dreams/${widget.dream.id}',
-      // Endpoints alternativos
-      'https://starry-1zm8.onrender.com/api/forum/posts/${widget.dream.id}',
-      'https://starry-1zm8.onrender.com/api/forum/${widget.dream.id}',
-    ];
-
-    bool synced = false;
-    for (final endpoint in endpoints) {
-      try {
-        debugPrint('📤 Intentando sincronizar en: $endpoint');
-        final response = await http
-            .put(
-              Uri.parse(endpoint),
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer $token',
-              },
-              body: postData,
-            )
-            .timeout(const Duration(seconds: 5));
-
-        debugPrint('📥 Respuesta: ${response.statusCode}');
-
-        if (response.statusCode == 200 || response.statusCode == 204) {
-          debugPrint('✓ Post del foro actualizado desde: $endpoint');
-          debugPrint('✓ Respuesta: ${response.body}');
-          synced = true;
-          break;
-        } else if (response.statusCode == 404) {
-          debugPrint('✗ 404: Post no encontrado - Info: ${response.body}');
-          continue;
-        } else if (response.statusCode == 403) {
-          debugPrint('✗ 403: No autorizado - ${response.body}');
-          break;
-        } else {
-          debugPrint('✗ Error ${response.statusCode}: ${response.body}');
-        }
-      } catch (e) {
-        debugPrint('✗ Excepción al sincronizar desde $endpoint: $e');
-        continue;
-      }
-    }
-
-    if (synced) {
-      debugPrint('✅ Sincronización completada exitosamente');
-    } else {
-      debugPrint(
-        '⚠ No se pudo sincronizar con el foro, pero el sueño fue actualizado localmente',
-      );
-    }
-  }
-
   /// Handles dream editing
   Future<void> _handleEditDream() async {
     final editedDream = await showDialog<Dream>(
@@ -332,20 +250,11 @@ class _DreamDetailPageState extends State<DreamDetailPage>
           'isRecurring': editedDream.isRecurring,
           'wokeUp': editedDream.wokeUp,
           'dreamInfo': editedDream.dreamInfo,
-          'isShared': editedDream.isShared,
         }),
       );
 
       if (response.statusCode == 200) {
         final updatedDream = Dream.fromJson(jsonDecode(response.body));
-        debugPrint('=== EDIT DEBUG ===');
-        debugPrint('Response body: ${response.body}');
-        debugPrint('updatedDream.isShared: ${updatedDream.isShared}');
-        debugPrint('widget.dream.id: ${widget.dream.id}');
-        debugPrint(
-          'Will sync: ${updatedDream.isShared && widget.dream.id != null}',
-        );
-
         setState(() {
           widget.dream.title = updatedDream.title;
           widget.dream.date = updatedDream.date;
@@ -363,10 +272,32 @@ class _DreamDetailPageState extends State<DreamDetailPage>
 
         // Si el sueño es compartido, actualizar también el post del foro
         if (updatedDream.isShared && widget.dream.id != null) {
-          debugPrint('✅ Condición de sync cumplida, llamando _syncForumPost');
-          await _syncForumPost(token, updatedDream);
-        } else {
-          debugPrint('❌ Condición de sync NO cumplida');
+          try {
+            await http.put(
+              Uri.parse(
+                'https://starry-1zm8.onrender.com/api/forum/posts/${widget.dream.id}',
+              ),
+              headers: {
+                'Content-Type': 'application/json',
+                if (token != null) 'Authorization': 'Bearer $token',
+              },
+              body: jsonEncode({
+                'title': updatedDream.title,
+                'date': updatedDream.date?.toIso8601String(),
+                'mood': updatedDream.mood,
+                'tags': updatedDream.tags,
+                'people': updatedDream.people,
+                'place': updatedDream.place,
+                'clarity': updatedDream.clarity,
+                'notes': updatedDream.notes,
+                'isRecurring': updatedDream.isRecurring,
+                'wokeUp': updatedDream.wokeUp,
+                'dreamInfo': updatedDream.dreamInfo,
+              }),
+            );
+          } catch (e) {
+            // Error al actualizar el post del foro, pero continuamos
+          }
         }
 
         if (mounted) {

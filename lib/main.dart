@@ -601,45 +601,36 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                           }),
                         );
                         if (response.statusCode == 201) {
-                          final createdDream = Dream.fromJson(
-                            jsonDecode(response.body),
-                          );
-
                           // Si está marcado para compartir en el foro, guardar también en el foro
-                          if (dream.isShared && createdDream.id != null) {
-                            try {
-                              await http.post(
-                                Uri.parse(
-                                  'https://starry-1zm8.onrender.com/api/forum/posts',
-                                ),
-                                headers: {
-                                  'Content-Type': 'application/json',
-                                  if (token != null)
-                                    'Authorization': 'Bearer $token',
-                                },
-                                body: jsonEncode({
-                                  'dreamId': createdDream.id,
-                                  'title': dream.title,
-                                  'date': dream.date?.toIso8601String(),
-                                  'mood': dream.mood,
-                                  'tags': dream.tags,
-                                  'people': dream.people,
-                                  'place': dream.place,
-                                  'clarity': dream.clarity,
-                                  'notes': dream.notes,
-                                  'isRecurring': dream.isRecurring,
-                                  'wokeUp': dream.wokeUp,
-                                  'dreamInfo': dream.dreamInfo,
-                                }),
-                              );
-                            } catch (e) {
-                              debugPrint('Error al compartir en el foro: $e');
-                            }
+                          if (dream.isShared) {
+                            await http.post(
+                              Uri.parse(
+                                'https://starry-1zm8.onrender.com/api/forum/posts',
+                              ),
+                              headers: {
+                                'Content-Type': 'application/json',
+                                if (token != null)
+                                  'Authorization': 'Bearer $token',
+                              },
+                              body: jsonEncode({
+                                'title': dream.title,
+                                'date': dream.date?.toIso8601String(),
+                                'mood': dream.mood,
+                                'tags': dream.tags,
+                                'people': dream.people,
+                                'place': dream.place,
+                                'clarity': dream.clarity,
+                                'notes': dream.notes,
+                                'isRecurring': dream.isRecurring,
+                                'wokeUp': dream.wokeUp,
+                                'dreamInfo': dream.dreamInfo,
+                              }),
+                            );
                           }
                           await _fetchDreams();
-                          // Navigation ya maneja el dialog (no hacer pop aquí)
+                          Navigator.of(context).pop();
                         } else if (response.statusCode == 401) {
-                          // Token inválido o expirado - el dialog se cerrará después del callback
+                          // Token inválido o expirado
                           await TokenStorage.clearToken();
                           if (mounted) {
                             Navigator.of(context).pushNamedAndRemoveUntil(
@@ -647,7 +638,6 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                               (Route<dynamic> route) => false,
                             );
                           }
-                          return;
                         } else {
                           // Manejar error de guardado
                         }
@@ -1859,7 +1849,7 @@ class _DreamFormDialogState extends State<DreamFormDialog> {
                     ),
                   ),
                   ElevatedButton(
-                    onPressed: () async {
+                    onPressed: () {
                       if (_formKey.currentState!.validate()) {
                         _formKey.currentState!.save();
                         final dream = Dream(
@@ -1876,10 +1866,8 @@ class _DreamFormDialogState extends State<DreamFormDialog> {
                           dreamInfo: dreamInfo,
                           isShared: isShared,
                         );
-                        await widget.onSave?.call(dream);
-                        if (mounted) {
-                          Navigator.of(context).pop();
-                        }
+                        widget.onSave?.call(dream);
+                        Navigator.of(context).pop();
                       }
                     },
                     style: ElevatedButton.styleFrom(
