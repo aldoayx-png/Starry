@@ -497,7 +497,7 @@ class _DreamDetailPageState extends State<DreamDetailPage>
           try {
             await http.delete(
               Uri.parse(
-                'https://starry-1zm8.onrender.com/api/forum/posts/${widget.dream.id}',
+                'https://starry-1zm8.onrender.com/api/forum/posts/by-dream/${widget.dream.id}',
               ),
               headers: {
                 'Content-Type': 'application/json',
@@ -506,6 +506,7 @@ class _DreamDetailPageState extends State<DreamDetailPage>
             );
           } catch (e) {
             // Error al eliminar del foro, pero continuamos
+            debugPrint('Error eliminando del foro: $e');
           }
         }
 
