@@ -937,7 +937,7 @@ class _ForumDreamDetailPageState extends State<ForumDreamDetailPage>
                                     ],
                                   ),
                                 );
-                              }).toList(),
+                              }),
                             ],
                           )
                         else

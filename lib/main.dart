@@ -608,12 +608,17 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                           if (!mounted) return;
 
                           if (response.statusCode == 201) {
+                            // Extraer el ID del sueño recién creado
+                            final createdDream = Dream.fromJson(
+                              jsonDecode(response.body),
+                            );
+
                             // Si está marcado para compartir en el foro, guardar también en el foro
-                            if (dream.isShared) {
+                            if (dream.isShared && createdDream.id != null) {
                               try {
-                                await http.post(
+                                final forumResponse = await http.post(
                                   Uri.parse(
-                                    'https://starry-1zm8.onrender.com/api/forum/posts',
+                                    'https://starry-1zm8.onrender.com/api/forum/posts/${createdDream.id}',
                                   ),
                                   headers: {
                                     'Content-Type': 'application/json',
@@ -634,8 +639,35 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                                     'dreamInfo': dream.dreamInfo,
                                   }),
                                 );
+
+                                if (forumResponse.statusCode != 201 &&
+                                    forumResponse.statusCode != 200) {
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(
+                                      parentContext,
+                                    ).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Sueño guardado, pero error al compartir en foro',
+                                        ),
+                                        duration: Duration(seconds: 2),
+                                      ),
+                                    );
+                                  }
+                                }
                               } catch (e) {
-                                // Error al compartir en el foro, pero el sueño se guardó
+                                if (mounted) {
+                                  ScaffoldMessenger.of(
+                                    parentContext,
+                                  ).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Sueño guardado, pero error al compartir: $e',
+                                      ),
+                                      duration: const Duration(seconds: 2),
+                                    ),
+                                  );
+                                }
                               }
                             }
                             if (mounted) {
