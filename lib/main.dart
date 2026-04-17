@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'dart:math';
 import 'dart:convert';
 import 'dart:ui';
@@ -658,13 +659,14 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
 
                             if (mounted) {
                               Navigator.of(parentContext).pop();
-                              // Dar un pequeño delay antes de refrescar
-                              await Future.delayed(
-                                const Duration(milliseconds: 300),
-                              );
-                              if (mounted) {
-                                await _fetchDreams();
-                              }
+                              // Refrescar después de que el frame se complete
+                              SchedulerBinding.instance.addPostFrameCallback((
+                                _,
+                              ) async {
+                                if (mounted) {
+                                  await _fetchDreams();
+                                }
+                              });
                             }
                           } else if (response.statusCode == 401) {
                             // Token inválido pero el sueño se creó de todas formas
@@ -674,13 +676,14 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                             // No redirigir al login, cerrar el dialog y refrescar
                             if (mounted) {
                               Navigator.of(parentContext).pop();
-                              // Dar un pequeño delay antes de refrescar
-                              await Future.delayed(
-                                const Duration(milliseconds: 300),
-                              );
-                              if (mounted) {
-                                await _fetchDreams();
-                              }
+                              // Refrescar después de que el frame se complete
+                              SchedulerBinding.instance.addPostFrameCallback((
+                                _,
+                              ) async {
+                                if (mounted) {
+                                  await _fetchDreams();
+                                }
+                              });
                             }
                           } else {
                             // Manejar error de guardado
