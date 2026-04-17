@@ -273,7 +273,7 @@ class _DreamDetailPageState extends State<DreamDetailPage>
         // Si el sueño es compartido, actualizar también el post del foro
         if (updatedDream.isShared && widget.dream.id != null) {
           try {
-            await http.put(
+            final forumResponse = await http.put(
               Uri.parse(
                 'https://starry-1zm8.onrender.com/api/forum/posts/${widget.dream.id}',
               ),
@@ -295,8 +295,16 @@ class _DreamDetailPageState extends State<DreamDetailPage>
                 'dreamInfo': updatedDream.dreamInfo,
               }),
             );
+
+            if (forumResponse.statusCode != 200) {
+              // Log but don't fail the whole update
+              debugPrint(
+                'Error actualizando foro: ${forumResponse.statusCode}',
+              );
+            }
           } catch (e) {
             // Error al actualizar el post del foro, pero continuamos
+            debugPrint('Error de conexión actualizando foro: $e');
           }
         }
 

@@ -608,69 +608,7 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                           if (!mounted) return;
 
                           if (response.statusCode == 201) {
-                            // Extraer el ID del sueño recién creado
-                            final createdDream = Dream.fromJson(
-                              jsonDecode(response.body),
-                            );
-
-                            // Si está marcado para compartir en el foro, guardar también en el foro
-                            if (dream.isShared && createdDream.id != null) {
-                              try {
-                                final forumResponse = await http.post(
-                                  Uri.parse(
-                                    'https://starry-1zm8.onrender.com/api/forum/posts',
-                                  ),
-                                  headers: {
-                                    'Content-Type': 'application/json',
-                                    if (token != null)
-                                      'Authorization': 'Bearer $token',
-                                  },
-                                  body: jsonEncode({
-                                    '_id': createdDream.id,
-                                    'title': dream.title,
-                                    'date': dream.date?.toIso8601String(),
-                                    'mood': dream.mood,
-                                    'tags': dream.tags,
-                                    'people': dream.people,
-                                    'place': dream.place,
-                                    'clarity': dream.clarity,
-                                    'notes': dream.notes,
-                                    'isRecurring': dream.isRecurring,
-                                    'wokeUp': dream.wokeUp,
-                                    'dreamInfo': dream.dreamInfo,
-                                  }),
-                                );
-
-                                if (forumResponse.statusCode != 201 &&
-                                    forumResponse.statusCode != 200) {
-                                  if (mounted) {
-                                    ScaffoldMessenger.of(
-                                      parentContext,
-                                    ).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'Sueño guardado, pero error al compartir en foro',
-                                        ),
-                                        duration: Duration(seconds: 2),
-                                      ),
-                                    );
-                                  }
-                                }
-                              } catch (e) {
-                                if (mounted) {
-                                  ScaffoldMessenger.of(
-                                    parentContext,
-                                  ).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Sueño guardado, pero error al compartir: $e',
-                                      ),
-                                      duration: const Duration(seconds: 2),
-                                    ),
-                                  );
-                                }
-                              }
-                            }
+                            // Sueño creado correctamente
                             if (mounted) {
                               Navigator.of(parentContext).pop();
                               // Dar un pequeño delay antes de refrescar
