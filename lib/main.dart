@@ -618,7 +618,7 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                               try {
                                 final forumResponse = await http.post(
                                   Uri.parse(
-                                    'https://starry-1zm8.onrender.com/api/forum/posts/${createdDream.id}',
+                                    'https://starry-1zm8.onrender.com/api/forum/posts',
                                   ),
                                   headers: {
                                     'Content-Type': 'application/json',
@@ -626,6 +626,7 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                                       'Authorization': 'Bearer $token',
                                   },
                                   body: jsonEncode({
+                                    '_id': createdDream.id,
                                     'title': dream.title,
                                     'date': dream.date?.toIso8601String(),
                                     'mood': dream.mood,
