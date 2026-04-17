@@ -671,9 +671,16 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                             debugPrint(
                               'Error 401 al crear sueño: ${response.body}',
                             );
-                            // No redirigir al login, cerrar el dialog normalmente
+                            // No redirigir al login, cerrar el dialog y refrescar
                             if (mounted) {
                               Navigator.of(parentContext).pop();
+                              // Dar un pequeño delay antes de refrescar
+                              await Future.delayed(
+                                const Duration(milliseconds: 300),
+                              );
+                              if (mounted) {
+                                await _fetchDreams();
+                              }
                             }
                           } else {
                             // Manejar error de guardado
