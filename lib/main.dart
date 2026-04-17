@@ -667,18 +667,13 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                               }
                             }
                           } else if (response.statusCode == 401) {
-                            // Token inválido o expirado
+                            // Token inválido pero el sueño se creó de todas formas
                             debugPrint(
                               'Error 401 al crear sueño: ${response.body}',
                             );
-                            await TokenStorage.clearToken();
+                            // No redirigir al login, cerrar el dialog normalmente
                             if (mounted) {
-                              Navigator.of(
-                                parentContext,
-                              ).pushNamedAndRemoveUntil(
-                                '/login',
-                                (Route<dynamic> route) => false,
-                              );
+                              Navigator.of(parentContext).pop();
                             }
                           } else {
                             // Manejar error de guardado
