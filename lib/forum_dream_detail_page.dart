@@ -23,10 +23,13 @@ class _ForumDreamDetailPageState extends State<ForumDreamDetailPage>
   final TextEditingController _commentController = TextEditingController();
   late List<Comment> _comments;
   bool _isSubmittingComment = false;
+  late Dream _dream;
+  bool _dreamDeleted = false;
 
   @override
   void initState() {
     super.initState();
+    _dream = widget.dream;
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 20),
@@ -36,6 +39,34 @@ class _ForumDreamDetailPageState extends State<ForumDreamDetailPage>
     _controller.addListener(() {
       _updateStars();
     });
+
+    // Refrescar datos del sueño desde el servidor
+    _fetchDreamData();
+  }
+
+  Future<void> _fetchDreamData() async {
+    try {
+      final response = await http.get(
+        Uri.parse(
+          'https://starry-1zm8.onrender.com/api/forum/posts/${widget.dream.id}',
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        setState(() {
+          _dream = Dream.fromJson(json);
+          _comments = _dream.comments;
+        });
+      } else if (response.statusCode == 404) {
+        // El post fue eliminado
+        setState(() {
+          _dreamDeleted = true;
+        });
+      }
+    } catch (e) {
+      // Error al cargar, usar datos locales
+    }
   }
 
   void _initStars(Size size) {
@@ -77,7 +108,7 @@ class _ForumDreamDetailPageState extends State<ForumDreamDetailPage>
       final token = await TokenStorage.getToken();
       final response = await http.post(
         Uri.parse(
-          'https://starry-1zm8.onrender.com/api/forum/posts/${widget.dream.id}/comment',
+          'https://starry-1zm8.onrender.com/api/forum/posts/${_dream.id}/comment',
         ),
         headers: {
           'Authorization': 'Bearer $token',
@@ -185,7 +216,7 @@ class _ForumDreamDetailPageState extends State<ForumDreamDetailPage>
         final token = await TokenStorage.getToken();
         final response = await http.put(
           Uri.parse(
-            'https://starry-1zm8.onrender.com/api/forum/posts/${widget.dream.id}/comments/${comment.id}',
+            'https://starry-1zm8.onrender.com/api/forum/posts/${_dream.id}/comments/${comment.id}',
           ),
           headers: {
             'Authorization': 'Bearer $token',
@@ -262,7 +293,7 @@ class _ForumDreamDetailPageState extends State<ForumDreamDetailPage>
         final token = await TokenStorage.getToken();
         final response = await http.delete(
           Uri.parse(
-            'https://starry-1zm8.onrender.com/api/forum/posts/${widget.dream.id}/comments/${comment.id}',
+            'https://starry-1zm8.onrender.com/api/forum/posts/${_dream.id}/comments/${comment.id}',
           ),
           headers: {
             'Authorization': 'Bearer $token',
@@ -323,46 +354,46 @@ class _ForumDreamDetailPageState extends State<ForumDreamDetailPage>
           spacing: 10,
           runSpacing: 10,
           children: [
-            if (widget.dream.mood != null)
+            if (_dream.mood != null)
               _DreamInfoChip(
-                icon: _getMoodIcon(widget.dream.mood!),
-                label: widget.dream.mood!,
-                color: _getMoodColor(widget.dream.mood!),
+                icon: _getMoodIcon(_dream.mood!),
+                label: _dream.mood!,
+                color: _getMoodColor(_dream.mood!),
               ),
-            if (widget.dream.date != null)
+            if (_dream.date != null)
               _DreamInfoChip(
                 icon: Icons.calendar_today,
-                label: widget.dream.date!.toLocal().toString().split(' ')[0],
+                label: _dream.date!.toLocal().toString().split(' ')[0],
                 color: Colors.deepPurple.shade700,
               ),
-            if (widget.dream.people != null && widget.dream.people!.isNotEmpty)
+            if (_dream.people != null && _dream.people!.isNotEmpty)
               _DreamInfoChip(
                 icon: Icons.people,
-                label: widget.dream.people!,
+                label: _dream.people!,
                 color: Colors.indigo.shade700,
               ),
-            if (widget.dream.place != null && widget.dream.place!.isNotEmpty)
+            if (_dream.place != null && _dream.place!.isNotEmpty)
               _DreamInfoChip(
                 icon: Icons.location_on,
-                label: widget.dream.place!,
+                label: _dream.place!,
                 color: Colors.red.shade700,
               ),
             _DreamInfoChip(
               icon: Icons.visibility,
-              label: widget.dream.clarity.round().toString(),
+              label: _dream.clarity.round().toString(),
               color: const Color(0xFF10B981),
             ),
             _DreamInfoChip(
               icon: Icons.repeat,
-              label: widget.dream.isRecurring ? 'Recurrente' : 'Única',
+              label: _dream.isRecurring ? 'Recurrente' : 'Única',
               color: Colors.purple.shade900,
             ),
             _DreamInfoChip(
               icon: Icons.alarm,
-              label: widget.dream.wokeUp ? 'Despertó' : 'Continuó',
+              label: _dream.wokeUp ? 'Despertó' : 'Continuó',
               color: Colors.indigo.shade900,
             ),
-            ...widget.dream.tags.map(
+            ..._dream.tags.map(
               (tag) => _DreamInfoChip(
                 icon: _getTagIcon(tag),
                 label: tag,
@@ -371,7 +402,7 @@ class _ForumDreamDetailPageState extends State<ForumDreamDetailPage>
             ),
           ],
         ),
-        if (widget.dream.notes != null && widget.dream.notes!.isNotEmpty) ...[
+        if (_dream.notes != null && _dream.notes!.isNotEmpty) ...[
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(12),
@@ -390,7 +421,7 @@ class _ForumDreamDetailPageState extends State<ForumDreamDetailPage>
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    widget.dream.notes!,
+                    _dream.notes!,
                     style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 13,
@@ -431,7 +462,7 @@ class _ForumDreamDetailPageState extends State<ForumDreamDetailPage>
             border: Border.all(color: Colors.white10, width: 1),
           ),
           child: Text(
-            widget.dream.dreamInfo!,
+            _dream.dreamInfo!,
             style: const TextStyle(
               color: Colors.white,
               fontSize: 15,
@@ -538,6 +569,81 @@ class _ForumDreamDetailPageState extends State<ForumDreamDetailPage>
     if (_stars.isEmpty) {
       _initStars(size);
     }
+
+    // Si el sueño fue eliminado, mostrar mensaje
+    if (_dreamDeleted) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          title: SizedBox(
+            height: 100,
+            width: 100,
+            child: Image.asset(
+              'assets/logo.png',
+              fit: BoxFit.contain,
+              height: 100,
+              width: 100,
+            ),
+          ),
+          flexibleSpace: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.black,
+                  Colors.black,
+                  Color(0xFF2193b0),
+                  Color(0xFF8e2de2),
+                ],
+                stops: [0.0, 0.25, 0.6, 1.0],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
+            ),
+          ),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.delete_outline, size: 64, color: Colors.white38),
+              const SizedBox(height: 16),
+              Text(
+                'Este sueño fue eliminado',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'El propietario eliminó este sueño compartido',
+                style: TextStyle(color: Colors.white38, fontSize: 14),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurple,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                ),
+                child: const Text(
+                  'Volver',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -659,7 +765,7 @@ class _ForumDreamDetailPageState extends State<ForumDreamDetailPage>
                             const SizedBox(width: 16),
                             Expanded(
                               child: Text(
-                                widget.dream.title ?? 'Sin título',
+                                _dream.title ?? 'Sin título',
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
@@ -675,8 +781,8 @@ class _ForumDreamDetailPageState extends State<ForumDreamDetailPage>
                         const SizedBox(height: 28),
                         _buildDreamInfoChips(),
                         const SizedBox(height: 36),
-                        if (widget.dream.dreamInfo != null &&
-                            widget.dream.dreamInfo!.isNotEmpty)
+                        if (_dream.dreamInfo != null &&
+                            _dream.dreamInfo!.isNotEmpty)
                           _buildDreamDescription(),
                         const SizedBox(height: 32),
                         // Comentarios

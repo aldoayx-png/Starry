@@ -484,6 +484,23 @@ class _DreamDetailPageState extends State<DreamDetailPage>
       );
 
       if (response.statusCode == 200) {
+        // Si el sueño era compartido, eliminar también el post del foro
+        if (widget.dream.isShared && widget.dream.id != null) {
+          try {
+            await http.delete(
+              Uri.parse(
+                'https://starry-1zm8.onrender.com/api/forum/posts/${widget.dream.id}',
+              ),
+              headers: {
+                'Content-Type': 'application/json',
+                if (token != null) 'Authorization': 'Bearer $token',
+              },
+            );
+          } catch (e) {
+            // Error al eliminar del foro, pero continuamos
+          }
+        }
+
         if (mounted) {
           Navigator.of(context).pop({'deleted': true, 'dream': widget.dream});
           ScaffoldMessenger.of(context).showSnackBar(
