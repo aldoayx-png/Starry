@@ -643,12 +643,36 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
 
                                 if (forumResponse.statusCode != 201 &&
                                     forumResponse.statusCode != 200) {
+                                  final errorMsg =
+                                      'Error ${forumResponse.statusCode}: ${forumResponse.body}';
                                   debugPrint(
-                                    'Error al compartir en foro: ${forumResponse.statusCode} - ${forumResponse.body}',
+                                    'Error al compartir en foro: $errorMsg',
                                   );
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(
+                                      parentContext,
+                                    ).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Sueño guardado pero no se compartió: $errorMsg',
+                                        ),
+                                        duration: const Duration(seconds: 3),
+                                      ),
+                                    );
+                                  }
                                 }
                               } catch (e) {
                                 debugPrint('Error al compartir en foro: $e');
+                                if (mounted) {
+                                  ScaffoldMessenger.of(
+                                    parentContext,
+                                  ).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Error compartiendo: $e'),
+                                      duration: const Duration(seconds: 3),
+                                    ),
+                                  );
+                                }
                               }
                             }
 
