@@ -163,6 +163,8 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
   Future<void> _fetchDreams() async {
     try {
       final token = await TokenStorage.getToken();
+      if (!mounted) return;
+
       final response = await http.get(
         Uri.parse('https://starry-1zm8.onrender.com/api/dreams'),
         headers: {
@@ -170,6 +172,8 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
           if (token != null) 'Authorization': 'Bearer $token',
         },
       );
+      if (!mounted) return;
+
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         final dreamsList = data.map((e) => Dream.fromJson(e)).toList();
@@ -192,12 +196,14 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
           // Si la fecha es igual, el más nuevo (mayor índice) primero
           return (b['index'] as int) - (a['index'] as int);
         });
-        setState(() {
-          _dreams.clear();
-          _dreams.addAll(
-            indexedDreams.map((e) => e['dream'] as Dream).toList(),
-          );
-        });
+        if (mounted) {
+          setState(() {
+            _dreams.clear();
+            _dreams.addAll(
+              indexedDreams.map((e) => e['dream'] as Dream).toList(),
+            );
+          });
+        }
       } else if (response.statusCode == 401) {
         // Token inválido o expirado
         debugPrint('Token inválido en _fetchDreams');
