@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'dart:math';
 import 'dart:convert';
 import 'dart:ui';
@@ -659,31 +658,18 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
 
                             if (mounted) {
                               Navigator.of(parentContext).pop();
-                              // Refrescar después de que el frame se complete
-                              SchedulerBinding.instance.addPostFrameCallback((
-                                _,
-                              ) async {
-                                if (mounted) {
-                                  await _fetchDreams();
-                                }
-                              });
+                              // El sueño se creó correctamente, no necesita refrescar
+                              // La lista se actualizará cuando vuelva a entrar a home
                             }
                           } else if (response.statusCode == 401) {
                             // Token inválido pero el sueño se creó de todas formas
                             debugPrint(
                               'Error 401 al crear sueño: ${response.body}',
                             );
-                            // No redirigir al login, cerrar el dialog y refrescar
+                            // No redirigir al login, cerrar el dialog
                             if (mounted) {
                               Navigator.of(parentContext).pop();
-                              // Refrescar después de que el frame se complete
-                              SchedulerBinding.instance.addPostFrameCallback((
-                                _,
-                              ) async {
-                                if (mounted) {
-                                  await _fetchDreams();
-                                }
-                              });
+                              // El sueño se creó, no necesita refrescar
                             }
                           } else {
                             // Manejar error de guardado
