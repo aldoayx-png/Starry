@@ -275,7 +275,7 @@ class _DreamDetailPageState extends State<DreamDetailPage>
           try {
             final forumResponse = await http.put(
               Uri.parse(
-                'https://starry-1zm8.onrender.com/api/forum/posts/${widget.dream.id}',
+                'https://starry-1zm8.onrender.com/api/forum/posts/by-dream/${widget.dream.id}',
               ),
               headers: {
                 'Content-Type': 'application/json',

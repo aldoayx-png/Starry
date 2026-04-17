@@ -40,6 +40,19 @@ router.get('/posts/:id', async (req, res) => {
   }
 });
 
+// Obtener un post por dreamId
+router.get('/posts/by-dream/:dreamId', async (req, res) => {
+  try {
+    const post = await ForumPost.findOne({ dreamId: req.params.dreamId })
+      .populate('userId', 'username')
+      .populate('comments.userId', 'username');
+    if (!post) return res.status(404).json({ error: 'Post no encontrado' });
+    res.json(post);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener el post' });
+  }
+});
+
 // Crear un nuevo post en el foro (requiere autenticación)
 router.post('/posts', auth, async (req, res) => {
   try {
@@ -71,6 +84,21 @@ router.put('/posts/:id', auth, async (req, res) => {
     if (!post) return res.status(404).json({ error: 'Post no encontrado' });
     if (post.userId.toString() !== req.userId) return res.status(403).json({ error: 'No autorizado' });
     const updatedPost = await ForumPost.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' });
+    res.json(updatedPost);
+  } catch (err) {
+    res.status(400).json({ error: 'Error al actualizar el post' });
+  }
+});
+
+// Actualizar un post por dreamId
+router.put('/posts/by-dream/:dreamId', auth, async (req, res) => {
+  try {
+    const post = await ForumPost.findOne({ dreamId: req.params.dreamId });
+    if (!post) return res.status(404).json({ error: 'Post no encontrado' });
+    if (post.userId.toString() !== req.userId) return res.status(403).json({ error: 'No autorizado' });
+    const updatedPost = await ForumPost.findByIdAndUpdate(post._id, req.body, { returnDocument: 'after' })
+      .populate('userId', 'username')
+      .populate('comments.userId', 'username');
     res.json(updatedPost);
   } catch (err) {
     res.status(400).json({ error: 'Error al actualizar el post' });

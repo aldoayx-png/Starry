@@ -48,7 +48,7 @@ class _ForumDreamDetailPageState extends State<ForumDreamDetailPage>
     try {
       final response = await http.get(
         Uri.parse(
-          'https://starry-1zm8.onrender.com/api/forum/posts/${widget.dream.id}',
+          'https://starry-1zm8.onrender.com/api/forum/posts/by-dream/${widget.dream.id}',
         ),
       );
 
@@ -66,6 +66,7 @@ class _ForumDreamDetailPageState extends State<ForumDreamDetailPage>
       }
     } catch (e) {
       // Error al cargar, usar datos locales
+      debugPrint('Error cargando post del foro: $e');
     }
   }
 
