@@ -621,6 +621,9 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                             }
                           } else if (response.statusCode == 401) {
                             // Token inválido o expirado
+                            debugPrint(
+                              'Error 401 al crear sueño: ${response.body}',
+                            );
                             await TokenStorage.clearToken();
                             if (mounted) {
                               Navigator.of(
@@ -632,10 +635,15 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                             }
                           } else {
                             // Manejar error de guardado
+                            debugPrint(
+                              'Error ${response.statusCode} al crear sueño: ${response.body}',
+                            );
                             if (mounted) {
                               ScaffoldMessenger.of(parentContext).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Error al guardar el sueño'),
+                                SnackBar(
+                                  content: Text(
+                                    'Error al guardar: ${response.statusCode}',
+                                  ),
                                 ),
                               );
                             }
