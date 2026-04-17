@@ -200,6 +200,7 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
         });
       } else if (response.statusCode == 401) {
         // Token inválido o expirado
+        debugPrint('Token inválido en _fetchDreams');
         await TokenStorage.clearToken();
         if (mounted) {
           Navigator.of(
@@ -207,10 +208,10 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
           ).pushNamedAndRemoveUntil('/login', (Route<dynamic> route) => false);
         }
       } else {
-        // Manejar error de backend
+        debugPrint('Error ${response.statusCode} al obtener sueños');
       }
     } catch (e) {
-      // Manejar error de red o parsing
+      debugPrint('Error de conexión al obtener sueños: $e');
     }
   }
 
@@ -648,31 +649,9 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                                   debugPrint(
                                     'Error al compartir en foro: $errorMsg',
                                   );
-                                  if (mounted) {
-                                    ScaffoldMessenger.of(
-                                      parentContext,
-                                    ).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'Sueño guardado pero no se compartió: $errorMsg',
-                                        ),
-                                        duration: const Duration(seconds: 3),
-                                      ),
-                                    );
-                                  }
                                 }
                               } catch (e) {
                                 debugPrint('Error al compartir en foro: $e');
-                                if (mounted) {
-                                  ScaffoldMessenger.of(
-                                    parentContext,
-                                  ).showSnackBar(
-                                    SnackBar(
-                                      content: Text('Error compartiendo: $e'),
-                                      duration: const Duration(seconds: 3),
-                                    ),
-                                  );
-                                }
                               }
                             }
 
