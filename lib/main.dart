@@ -205,14 +205,9 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
           });
         }
       } else if (response.statusCode == 401) {
-        // Token inválido o expirado
+        // Token inválido o expirado, pero el sueño ya se creó
         debugPrint('Token inválido en _fetchDreams');
-        await TokenStorage.clearToken();
-        if (mounted) {
-          Navigator.of(
-            context,
-          ).pushNamedAndRemoveUntil('/login', (Route<dynamic> route) => false);
-        }
+        // No redirigir al login, solo ignorar el error
       } else {
         debugPrint('Error ${response.statusCode} al obtener sueños');
       }
