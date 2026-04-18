@@ -647,143 +647,147 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                 onPressed: () {
                   showDialog(
                     context: context,
-                    builder: (dialogContext) => DreamFormDialog(
-                      onSave: (dream) async {
-                        debugPrint('=== INICIO: Guardar sueño ===');
-                        try {
-                          final token = await TokenStorage.getToken();
-                          debugPrint(
-                            'TOKEN: ${token != null ? "Existe" : "NO existe"}',
-                          );
-                          if (!mounted) {
-                            debugPrint('Widget no mounted, saliendo');
-                            return;
-                          }
-
-                          debugPrint('Enviando POST a /dreams...');
-                          final response = await http.post(
-                            Uri.parse(
-                              'https://starry-1zm8.onrender.com/api/dreams',
-                            ),
-                            headers: {
-                              'Content-Type': 'application/json',
-                              if (token != null)
-                                'Authorization': 'Bearer $token',
-                            },
-                            body: jsonEncode({
-                              'title': dream.title,
-                              'date': dream.date?.toIso8601String(),
-                              'mood': dream.mood,
-                              'tags': dream.tags,
-                              'people': dream.people,
-                              'place': dream.place,
-                              'clarity': dream.clarity,
-                              'notes': dream.notes,
-                              'isRecurring': dream.isRecurring,
-                              'wokeUp': dream.wokeUp,
-                              'dreamInfo': dream.dreamInfo,
-                              'isShared': dream.isShared,
-                            }),
-                          );
-                          debugPrint('Respuesta: ${response.statusCode}');
-                          if (!mounted) {
+                    builder: (dialogContext) {
+                      return DreamFormDialog(
+                        onSave: (dream) async {
+                          debugPrint('=== INICIO: Guardar sueño ===');
+                          try {
+                            final token = await TokenStorage.getToken();
                             debugPrint(
-                              'Widget no mounted después de POST, saliendo',
+                              'TOKEN: ${token != null ? "Existe" : "NO existe"}',
                             );
-                            return;
-                          }
+                            if (!mounted) {
+                              debugPrint('Widget no mounted, saliendo');
+                              return;
+                            }
 
-                          if (response.statusCode == 201) {
-                            debugPrint('Sueño creado (201)');
-                            // Sueño creado correctamente
-                            final createdDream = Dream.fromJson(
-                              jsonDecode(response.body),
+                            debugPrint('Enviando POST a /dreams...');
+                            final response = await http.post(
+                              Uri.parse(
+                                'https://starry-1zm8.onrender.com/api/dreams',
+                              ),
+                              headers: {
+                                'Content-Type': 'application/json',
+                                if (token != null)
+                                  'Authorization': 'Bearer $token',
+                              },
+                              body: jsonEncode({
+                                'title': dream.title,
+                                'date': dream.date?.toIso8601String(),
+                                'mood': dream.mood,
+                                'tags': dream.tags,
+                                'people': dream.people,
+                                'place': dream.place,
+                                'clarity': dream.clarity,
+                                'notes': dream.notes,
+                                'isRecurring': dream.isRecurring,
+                                'wokeUp': dream.wokeUp,
+                                'dreamInfo': dream.dreamInfo,
+                                'isShared': dream.isShared,
+                              }),
                             );
+                            debugPrint('Respuesta: ${response.statusCode}');
+                            if (!mounted) {
+                              debugPrint(
+                                'Widget no mounted después de POST, saliendo',
+                              );
+                              return;
+                            }
 
-                            // Si está marcado para compartir en el foro, guardar también en el foro
-                            if (dream.isShared && createdDream.id != null) {
-                              debugPrint('Compartiendo en foro...');
-                              try {
-                                final forumResponse = await http.post(
-                                  Uri.parse(
-                                    'https://starry-1zm8.onrender.com/api/forum/posts',
-                                  ),
-                                  headers: {
-                                    'Content-Type': 'application/json',
-                                    if (token != null)
-                                      'Authorization': 'Bearer $token',
-                                  },
-                                  body: jsonEncode({
-                                    'dreamId': createdDream.id,
-                                    'title': dream.title,
-                                    'date': dream.date?.toIso8601String(),
-                                    'mood': dream.mood,
-                                    'tags': dream.tags,
-                                    'people': dream.people,
-                                    'place': dream.place,
-                                    'clarity': dream.clarity,
-                                    'notes': dream.notes,
-                                    'isRecurring': dream.isRecurring,
-                                    'wokeUp': dream.wokeUp,
-                                    'dreamInfo': dream.dreamInfo,
-                                  }),
-                                );
-                                debugPrint(
-                                  'Respuesta del foro: ${forumResponse.statusCode}',
-                                );
+                            if (response.statusCode == 201) {
+                              debugPrint('Sueño creado (201)');
+                              // Sueño creado correctamente
+                              final createdDream = Dream.fromJson(
+                                jsonDecode(response.body),
+                              );
 
-                                if (forumResponse.statusCode != 201 &&
-                                    forumResponse.statusCode != 200) {
-                                  final errorMsg =
-                                      'Error ${forumResponse.statusCode}: ${forumResponse.body}';
-                                  debugPrint(
-                                    'Error al compartir en foro: $errorMsg',
+                              // Si está marcado para compartir en el foro, guardar también en el foro
+                              if (dream.isShared && createdDream.id != null) {
+                                debugPrint('Compartiendo en foro...');
+                                try {
+                                  final forumResponse = await http.post(
+                                    Uri.parse(
+                                      'https://starry-1zm8.onrender.com/api/forum/posts',
+                                    ),
+                                    headers: {
+                                      'Content-Type': 'application/json',
+                                      if (token != null)
+                                        'Authorization': 'Bearer $token',
+                                    },
+                                    body: jsonEncode({
+                                      'dreamId': createdDream.id,
+                                      'title': dream.title,
+                                      'date': dream.date?.toIso8601String(),
+                                      'mood': dream.mood,
+                                      'tags': dream.tags,
+                                      'people': dream.people,
+                                      'place': dream.place,
+                                      'clarity': dream.clarity,
+                                      'notes': dream.notes,
+                                      'isRecurring': dream.isRecurring,
+                                      'wokeUp': dream.wokeUp,
+                                      'dreamInfo': dream.dreamInfo,
+                                    }),
                                   );
+                                  debugPrint(
+                                    'Respuesta del foro: ${forumResponse.statusCode}',
+                                  );
+
+                                  if (forumResponse.statusCode != 201 &&
+                                      forumResponse.statusCode != 200) {
+                                    final errorMsg =
+                                        'Error ${forumResponse.statusCode}: ${forumResponse.body}';
+                                    debugPrint(
+                                      'Error al compartir en foro: $errorMsg',
+                                    );
+                                  }
+                                } catch (e) {
+                                  debugPrint('Error al compartir en foro: $e');
                                 }
-                              } catch (e) {
-                                debugPrint('Error al compartir en foro: $e');
+                              }
+
+                              if (mounted) {
+                                debugPrint('Cerrando dialog con dialogContext');
+                                Navigator.of(dialogContext).pop();
+                              }
+                            } else if (response.statusCode == 401) {
+                              debugPrint('Error 401: ${response.body}');
+                              // Token inválido pero el sueño se creó de todas formas
+                              // No redirigir al login, cerrar el dialog
+                              if (mounted) {
+                                debugPrint(
+                                  'Cerrando dialog (401) con dialogContext',
+                                );
+                                Navigator.of(dialogContext).pop();
+                              }
+                            } else {
+                              // Manejar error de guardado
+                              debugPrint(
+                                'Error ${response.statusCode} al crear sueño: ${response.body}',
+                              );
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Error al guardar: ${response.statusCode}',
+                                    ),
+                                  ),
+                                );
                               }
                             }
-
-                            if (mounted) {
-                              debugPrint('Cerrando dialog con context');
-                              Navigator.of(context).pop();
-                            }
-                          } else if (response.statusCode == 401) {
-                            debugPrint('Error 401: ${response.body}');
-                            // Token inválido pero el sueño se creó de todas formas
-                            // No redirigir al login, cerrar el dialog
-                            if (mounted) {
-                              debugPrint('Cerrando dialog (401) con context');
-                              Navigator.of(context).pop();
-                            }
-                          } else {
-                            // Manejar error de guardado
-                            debugPrint(
-                              'Error ${response.statusCode} al crear sueño: ${response.body}',
-                            );
+                          } catch (e) {
+                            debugPrint('EXCEPCIÓN: $e');
                             if (mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    'Error al guardar: ${response.statusCode}',
-                                  ),
+                                const SnackBar(
+                                  content: Text('Error de conexión'),
                                 ),
                               );
                             }
                           }
-                        } catch (e) {
-                          debugPrint('EXCEPCIÓN: $e');
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Error de conexión'),
-                              ),
-                            );
-                          }
-                        }
-                      },
-                    ),
+                        },
+                      );
+                    },
                   );
                 },
                 backgroundColor: Colors.transparent,
