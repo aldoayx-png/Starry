@@ -132,10 +132,30 @@ class _NavigatorObserver extends NavigatorObserver {
   }
 
   @override
+  void didChangeNext(Route<dynamic> route) {
+    debugPrint(
+      '📍 CAMBIO SIGUIENTE: Ruta siguiente para ${route.settings.name}',
+    );
+  }
+
+  @override
   void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
     debugPrint(
       '📍 NAVEGACIÓN REMOVE: ${route.settings.name} (anterior: ${previousRoute?.settings.name})',
     );
+  }
+
+  @override
+  void didStartUserGesture(
+    Route<dynamic> route,
+    Route<dynamic>? previousRoute,
+  ) {
+    debugPrint('📍 GESTO USUARIO: Iniciado en ${route.settings.name}');
+  }
+
+  @override
+  void didStopUserGesture() {
+    debugPrint('📍 GESTO USUARIO: Finalizado');
   }
 }
 
@@ -173,6 +193,7 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
 
   Future<void> _fetchUsername() async {
     try {
+      debugPrint('👤 _fetchUsername: Iniciando...');
       final token = await TokenStorage.getToken();
       final response = await http.get(
         Uri.parse('https://starry-1zm8.onrender.com/api/profile'),
@@ -181,19 +202,23 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
           if (token != null) 'Authorization': 'Bearer $token',
         },
       );
+      debugPrint('👤 _fetchUsername: Respuesta ${response.statusCode}');
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         setState(() {
           username = data['username'];
         });
+      } else if (response.statusCode == 401) {
+        debugPrint('👤 _fetchUsername: Error 401 - Token inválido');
       }
     } catch (e) {
-      // Error al obtener usuario
+      debugPrint('👤 _fetchUsername: Error - $e');
     }
   }
 
   Future<void> _fetchDreams() async {
     try {
+      debugPrint('💭 _fetchDreams: Iniciando...');
       final token = await TokenStorage.getToken();
       if (!mounted) return;
 
@@ -204,6 +229,7 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
           if (token != null) 'Authorization': 'Bearer $token',
         },
       );
+      debugPrint('💭 _fetchDreams: Respuesta ${response.statusCode}');
       if (!mounted) return;
 
       if (response.statusCode == 200) {
@@ -235,16 +261,15 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
               indexedDreams.map((e) => e['dream'] as Dream).toList(),
             );
           });
+          debugPrint('💭 _fetchDreams: ${_dreams.length} sueños cargados');
         }
       } else if (response.statusCode == 401) {
-        // Token inválido o expirado, pero el sueño ya se creó
-        debugPrint('Token inválido en _fetchDreams');
-        // No redirigir al login, solo ignorar el error
+        debugPrint('💭 _fetchDreams: Error 401 - Token inválido');
       } else {
-        debugPrint('Error ${response.statusCode} al obtener sueños');
+        debugPrint('💭 _fetchDreams: Error ${response.statusCode}');
       }
     } catch (e) {
-      debugPrint('Error de conexión al obtener sueños: $e');
+      debugPrint('💭 _fetchDreams: Exception - $e');
     }
   }
 
