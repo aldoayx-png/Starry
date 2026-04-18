@@ -115,6 +115,7 @@ class _NavigatorObserver extends NavigatorObserver {
     debugPrint(
       '📍 NAVEGACIÓN PUSH: ${route.settings.name} (anterior: ${previousRoute?.settings.name})',
     );
+    _printRouteStack();
   }
 
   @override
@@ -122,6 +123,7 @@ class _NavigatorObserver extends NavigatorObserver {
     debugPrint(
       '📍 NAVEGACIÓN POP: ${route.settings.name} (anterior: ${previousRoute?.settings.name})',
     );
+    _printRouteStack();
   }
 
   @override
@@ -129,6 +131,7 @@ class _NavigatorObserver extends NavigatorObserver {
     debugPrint(
       '📍 NAVEGACIÓN REPLACE: ${newRoute?.settings.name} reemplaza ${oldRoute?.settings.name}',
     );
+    _printRouteStack();
   }
 
   @override
@@ -136,6 +139,7 @@ class _NavigatorObserver extends NavigatorObserver {
     debugPrint(
       '📍 NAVEGACIÓN REMOVE: ${route.settings.name} (anterior: ${previousRoute?.settings.name})',
     );
+    _printRouteStack();
   }
 
   @override
@@ -149,6 +153,20 @@ class _NavigatorObserver extends NavigatorObserver {
   @override
   void didStopUserGesture() {
     debugPrint('📍 GESTO USUARIO: Finalizado');
+  }
+
+  void _printRouteStack() {
+    if (navigator != null) {
+      debugPrint('📋 RUTA STACK (Navigator exists):');
+      try {
+        final routeStr = navigator.toString();
+        debugPrint('  Navigator: $routeStr');
+      } catch (e) {
+        debugPrint('  Error al inspeccionar: $e');
+      }
+    } else {
+      debugPrint('📋 RUTA STACK: navigator es NULL');
+    }
   }
 }
 
