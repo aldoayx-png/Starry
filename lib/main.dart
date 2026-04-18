@@ -645,7 +645,6 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
               ),
               child: FloatingActionButton(
                 onPressed: () {
-                  final homeContext = context; // Guardar el context del home
                   showDialog(
                     context: context,
                     builder: (dialogContext) => DreamFormDialog(
@@ -747,20 +746,19 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                             }
 
                             if (mounted) {
-                              debugPrint('Cerrando dialog');
-                              Navigator.of(homeContext).pop();
+                              debugPrint('Cerrando dialog con dialogContext');
+                              Navigator.of(dialogContext).pop();
                               debugPrint('Dialog cerrado correctamente');
-                              // El sueño se creó correctamente, no necesita refrescar
-                              // La lista se actualizará cuando vuelva a entrar a home
                             }
                           } else if (response.statusCode == 401) {
                             debugPrint('Error 401: ${response.body}');
                             // Token inválido pero el sueño se creó de todas formas
                             // No redirigir al login, cerrar el dialog
                             if (mounted) {
-                              debugPrint('Cerrando dialog (401)');
-                              Navigator.of(homeContext).pop();
-                              // El sueño se creó, no necesita refrescar
+                              debugPrint(
+                                'Cerrando dialog (401) con dialogContext',
+                              );
+                              Navigator.of(dialogContext).pop();
                             }
                           } else {
                             // Manejar error de guardado
@@ -768,8 +766,7 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                               'Error ${response.statusCode} al crear sueño: ${response.body}',
                             );
                             if (mounted) {
-                              // Usar homeContext que sigue siendo válido
-                              ScaffoldMessenger.of(homeContext).showSnackBar(
+                              ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
                                     'Error al guardar: ${response.statusCode}',
@@ -781,8 +778,7 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                         } catch (e) {
                           debugPrint('EXCEPCIÓN: $e');
                           if (mounted) {
-                            // Usar homeContext que sigue siendo válido
-                            ScaffoldMessenger.of(homeContext).showSnackBar(
+                            ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text('Error de conexión'),
                               ),
