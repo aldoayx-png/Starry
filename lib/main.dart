@@ -753,13 +753,23 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                                 try {
                                   if (mounted && dialogContext.mounted) {
                                     Navigator.of(dialogContext).pop();
-                                    // Refrescar lista de sueños después de guardar
-                                    _fetchDreams();
                                   }
                                 } catch (e) {
                                   debugPrint('Error al cerrar dialog: $e');
                                 }
                               });
+                              // Refrescar lista de sueños con un pequeño delay
+                              Future.delayed(
+                                const Duration(milliseconds: 500),
+                                () {
+                                  if (mounted) {
+                                    debugPrint(
+                                      'Refrescando lista de sueños...',
+                                    );
+                                    _fetchDreams();
+                                  }
+                                },
+                              );
                             } else if (response.statusCode == 401) {
                               debugPrint('Error 401: ${response.body}');
                               debugPrint('Cerrando dialog (401) con pop');
@@ -767,13 +777,23 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                                 try {
                                   if (mounted && dialogContext.mounted) {
                                     Navigator.of(dialogContext).pop();
-                                    // Refrescar lista de sueños aunque haya error de token
-                                    _fetchDreams();
                                   }
                                 } catch (e) {
                                   debugPrint('Error al cerrar dialog: $e');
                                 }
                               });
+                              // Refrescar lista de sueños con un pequeño delay
+                              Future.delayed(
+                                const Duration(milliseconds: 500),
+                                () {
+                                  if (mounted) {
+                                    debugPrint(
+                                      'Refrescando lista de sueños...',
+                                    );
+                                    _fetchDreams();
+                                  }
+                                },
+                              );
                             } else {
                               // Manejar error de guardado
                               debugPrint(
