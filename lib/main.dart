@@ -748,7 +748,6 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                             if (mounted) {
                               debugPrint('Cerrando dialog con dialogContext');
                               Navigator.of(dialogContext).pop();
-                              debugPrint('Dialog cerrado correctamente');
                             }
                           } else if (response.statusCode == 401) {
                             debugPrint('Error 401: ${response.body}');
