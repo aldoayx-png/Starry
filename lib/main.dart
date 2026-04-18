@@ -132,13 +132,6 @@ class _NavigatorObserver extends NavigatorObserver {
   }
 
   @override
-  void didChangeNext(Route<dynamic> route) {
-    debugPrint(
-      '📍 CAMBIO SIGUIENTE: Ruta siguiente para ${route.settings.name}',
-    );
-  }
-
-  @override
   void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
     debugPrint(
       '📍 NAVEGACIÓN REMOVE: ${route.settings.name} (anterior: ${previousRoute?.settings.name})',
