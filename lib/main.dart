@@ -23,6 +23,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('🔧 BUILD: MyApp');
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Diario de Sueños',
@@ -31,6 +32,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       initialRoute: '/login',
+      navigatorObservers: [_NavigatorObserver()],
       onGenerateRoute: (settings) {
         Widget page;
         switch (settings.name) {
@@ -103,6 +105,36 @@ class MyApp extends StatelessWidget {
           transitionDuration: const Duration(milliseconds: 700),
         );
       },
+    );
+  }
+}
+
+class _NavigatorObserver extends NavigatorObserver {
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    debugPrint(
+      '📍 NAVEGACIÓN PUSH: ${route.settings.name} (anterior: ${previousRoute?.settings.name})',
+    );
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    debugPrint(
+      '📍 NAVEGACIÓN POP: ${route.settings.name} (anterior: ${previousRoute?.settings.name})',
+    );
+  }
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    debugPrint(
+      '📍 NAVEGACIÓN REPLACE: ${newRoute?.settings.name} reemplaza ${oldRoute?.settings.name}',
+    );
+  }
+
+  @override
+  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    debugPrint(
+      '📍 NAVEGACIÓN REMOVE: ${route.settings.name} (anterior: ${previousRoute?.settings.name})',
     );
   }
 }
@@ -257,6 +289,7 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('=== BUILD: DreamJournalHome reconstruido ===');
     final size = MediaQuery.of(context).size;
     _lastSize = size;
     if (_stars.isEmpty) {
