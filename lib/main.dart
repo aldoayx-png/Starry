@@ -450,18 +450,6 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                                 _dreams[idx] = result['dream'];
                               }
                             });
-                            // Refrescar lista después de editar
-                            Future.delayed(
-                              const Duration(milliseconds: 300),
-                              () {
-                                if (mounted) {
-                                  debugPrint(
-                                    'Refrescando lista después de editar...',
-                                  );
-                                  _fetchDreams();
-                                }
-                              },
-                            );
                           }
                         }
                       },
