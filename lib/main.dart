@@ -574,7 +574,6 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
               ),
               child: FloatingActionButton(
                 onPressed: () {
-                  final parentContext = context;
                   showDialog(
                     context: context,
                     builder: (dialogContext) => DreamFormDialog(
@@ -676,8 +675,10 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                             }
 
                             if (mounted) {
-                              debugPrint('Cerrando dialog con Navigator.pop()');
-                              Navigator.of(parentContext).pop();
+                              debugPrint(
+                                'Cerrando dialog con Navigator de dialogContext',
+                              );
+                              Navigator.of(dialogContext).pop();
                               debugPrint(
                                 'Dialog cerrado, esperando a que aparezca login...',
                               );
@@ -690,7 +691,7 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                             // No redirigir al login, cerrar el dialog
                             if (mounted) {
                               debugPrint('Cerrando dialog (401)');
-                              Navigator.of(parentContext).pop();
+                              Navigator.of(dialogContext).pop();
                               // El sueño se creó, no necesita refrescar
                             }
                           } else {
@@ -699,7 +700,7 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                               'Error ${response.statusCode} al crear sueño: ${response.body}',
                             );
                             if (mounted) {
-                              ScaffoldMessenger.of(parentContext).showSnackBar(
+                              ScaffoldMessenger.of(dialogContext).showSnackBar(
                                 SnackBar(
                                   content: Text(
                                     'Error al guardar: ${response.statusCode}',
@@ -711,7 +712,7 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                         } catch (e) {
                           debugPrint('EXCEPCIÓN: $e');
                           if (mounted) {
-                            ScaffoldMessenger.of(parentContext).showSnackBar(
+                            ScaffoldMessenger.of(dialogContext).showSnackBar(
                               const SnackBar(
                                 content: Text('Error de conexión'),
                               ),
