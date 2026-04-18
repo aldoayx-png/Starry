@@ -747,22 +747,33 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                                 }
                               }
 
-                              if (mounted && dialogContext.mounted) {
-                                debugPrint('Cerrando dialog con pop');
-                                Navigator.of(dialogContext).pop();
-                                // Refrescar lista de sueños después de guardar
-                                _fetchDreams();
-                              }
+                              debugPrint('Cerrando dialog con pop');
+                              // Usar Future.microtask para asegurar que el pop ocurra de forma segura
+                              Future.microtask(() {
+                                try {
+                                  if (mounted && dialogContext.mounted) {
+                                    Navigator.of(dialogContext).pop();
+                                    // Refrescar lista de sueños después de guardar
+                                    _fetchDreams();
+                                  }
+                                } catch (e) {
+                                  debugPrint('Error al cerrar dialog: $e');
+                                }
+                              });
                             } else if (response.statusCode == 401) {
                               debugPrint('Error 401: ${response.body}');
-                              // Token inválido pero el sueño se creó de todas formas
-                              // No redirigir al login, cerrar el dialog
-                              if (mounted && dialogContext.mounted) {
-                                debugPrint('Cerrando dialog (401) con pop');
-                                Navigator.of(dialogContext).pop();
-                                // Refrescar lista de sueños aunque haya error de token
-                                _fetchDreams();
-                              }
+                              debugPrint('Cerrando dialog (401) con pop');
+                              Future.microtask(() {
+                                try {
+                                  if (mounted && dialogContext.mounted) {
+                                    Navigator.of(dialogContext).pop();
+                                    // Refrescar lista de sueños aunque haya error de token
+                                    _fetchDreams();
+                                  }
+                                } catch (e) {
+                                  debugPrint('Error al cerrar dialog: $e');
+                                }
+                              });
                             } else {
                               // Manejar error de guardado
                               debugPrint(
