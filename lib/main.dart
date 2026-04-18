@@ -574,6 +574,7 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
               ),
               child: FloatingActionButton(
                 onPressed: () {
+                  final homeContext = context; // Guardar el context del home
                   showDialog(
                     context: context,
                     builder: (dialogContext) => DreamFormDialog(
@@ -679,9 +680,7 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                                 'Cerrando dialog con Navigator de dialogContext',
                               );
                               Navigator.of(dialogContext).pop();
-                              debugPrint(
-                                'Dialog cerrado, esperando a que aparezca login...',
-                              );
+                              debugPrint('Dialog cerrado correctamente');
                               // El sueño se creó correctamente, no necesita refrescar
                               // La lista se actualizará cuando vuelva a entrar a home
                             }
@@ -700,7 +699,8 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                               'Error ${response.statusCode} al crear sueño: ${response.body}',
                             );
                             if (mounted) {
-                              ScaffoldMessenger.of(dialogContext).showSnackBar(
+                              // Usar homeContext que sigue siendo válido
+                              ScaffoldMessenger.of(homeContext).showSnackBar(
                                 SnackBar(
                                   content: Text(
                                     'Error al guardar: ${response.statusCode}',
@@ -712,7 +712,8 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                         } catch (e) {
                           debugPrint('EXCEPCIÓN: $e');
                           if (mounted) {
-                            ScaffoldMessenger.of(dialogContext).showSnackBar(
+                            // Usar homeContext que sigue siendo válido
+                            ScaffoldMessenger.of(homeContext).showSnackBar(
                               const SnackBar(
                                 content: Text('Error de conexión'),
                               ),
