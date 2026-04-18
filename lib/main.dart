@@ -579,10 +579,18 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                     context: context,
                     builder: (dialogContext) => DreamFormDialog(
                       onSave: (dream) async {
+                        debugPrint('=== INICIO: Guardar sueño ===');
                         try {
                           final token = await TokenStorage.getToken();
-                          if (!mounted) return;
+                          debugPrint(
+                            'TOKEN: ${token != null ? "Existe" : "NO existe"}',
+                          );
+                          if (!mounted) {
+                            debugPrint('Widget no mounted, saliendo');
+                            return;
+                          }
 
+                          debugPrint('Enviando POST a /dreams...');
                           final response = await http.post(
                             Uri.parse(
                               'https://starry-1zm8.onrender.com/api/dreams',
@@ -607,9 +615,16 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                               'isShared': dream.isShared,
                             }),
                           );
-                          if (!mounted) return;
+                          debugPrint('Respuesta: ${response.statusCode}');
+                          if (!mounted) {
+                            debugPrint(
+                              'Widget no mounted después de POST, saliendo',
+                            );
+                            return;
+                          }
 
                           if (response.statusCode == 201) {
+                            debugPrint('Sueño creado (201)');
                             // Sueño creado correctamente
                             final createdDream = Dream.fromJson(
                               jsonDecode(response.body),
@@ -617,6 +632,7 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
 
                             // Si está marcado para compartir en el foro, guardar también en el foro
                             if (dream.isShared && createdDream.id != null) {
+                              debugPrint('Compartiendo en foro...');
                               try {
                                 final forumResponse = await http.post(
                                   Uri.parse(
@@ -642,6 +658,9 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                                     'dreamInfo': dream.dreamInfo,
                                   }),
                                 );
+                                debugPrint(
+                                  'Respuesta del foro: ${forumResponse.statusCode}',
+                                );
 
                                 if (forumResponse.statusCode != 201 &&
                                     forumResponse.statusCode != 200) {
@@ -657,17 +676,20 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                             }
 
                             if (mounted) {
+                              debugPrint('Cerrando dialog con Navigator.pop()');
                               Navigator.of(parentContext).pop();
+                              debugPrint(
+                                'Dialog cerrado, esperando a que aparezca login...',
+                              );
                               // El sueño se creó correctamente, no necesita refrescar
                               // La lista se actualizará cuando vuelva a entrar a home
                             }
                           } else if (response.statusCode == 401) {
+                            debugPrint('Error 401: ${response.body}');
                             // Token inválido pero el sueño se creó de todas formas
-                            debugPrint(
-                              'Error 401 al crear sueño: ${response.body}',
-                            );
                             // No redirigir al login, cerrar el dialog
                             if (mounted) {
+                              debugPrint('Cerrando dialog (401)');
                               Navigator.of(parentContext).pop();
                               // El sueño se creó, no necesita refrescar
                             }
@@ -687,6 +709,7 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                             }
                           }
                         } catch (e) {
+                          debugPrint('EXCEPCIÓN: $e');
                           if (mounted) {
                             ScaffoldMessenger.of(parentContext).showSnackBar(
                               const SnackBar(
