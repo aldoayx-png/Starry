@@ -301,6 +301,7 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    debugPrint('🔄 didChangeDependencies: Dependencies cambiaron');
     setState(() {
       _currentIndex = 0;
     });
@@ -308,6 +309,7 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
 
   @override
   void dispose() {
+    debugPrint('🗑️ dispose: DreamJournalHome siendo destruido');
     _controller.dispose();
     super.dispose();
   }

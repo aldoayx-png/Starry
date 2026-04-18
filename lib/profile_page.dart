@@ -35,6 +35,7 @@ class _ProfilePageState extends State<ProfilePage>
   @override
   void initState() {
     super.initState();
+    debugPrint('🔑 ProfilePage: initState() - ABIERTO');
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 20),
@@ -91,6 +92,9 @@ class _ProfilePageState extends State<ProfilePage>
           });
         } else if (statsResponse.statusCode == 401) {
           // Token inválido o expirado
+          debugPrint(
+            '🚨 ProfilePage._fetchProfile: STATS 401 - BORRANDO TOKEN Y YENDO A LOGIN',
+          );
           await TokenStorage.clearToken();
           if (mounted) {
             Navigator.of(context).pushNamedAndRemoveUntil(
@@ -106,6 +110,9 @@ class _ProfilePageState extends State<ProfilePage>
         }
       } else if (response.statusCode == 401) {
         // Token inválido o expirado
+        debugPrint(
+          '🚨 ProfilePage._fetchProfile: PROFILE 401 - BORRANDO TOKEN Y YENDO A LOGIN',
+        );
         await TokenStorage.clearToken();
         if (mounted) {
           Navigator.of(
@@ -162,6 +169,9 @@ class _ProfilePageState extends State<ProfilePage>
         });
       } else if (response.statusCode == 401) {
         // Token inválido o expirado
+        debugPrint(
+          '🚨 ProfilePage._fetchWeeklyMood: 401 - BORRANDO TOKEN Y YENDO A LOGIN',
+        );
         await TokenStorage.clearToken();
         if (mounted) {
           Navigator.of(
