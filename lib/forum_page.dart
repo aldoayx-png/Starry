@@ -27,6 +27,7 @@ class _ForumPageState extends State<ForumPage> with TickerProviderStateMixin {
   final Map<String, bool> _likedPosts = {};
   final Map<String, int> _likeCount = {};
   final Set<String> _processingLikes = {};
+  bool _isRefreshingPosts = false; // Evitar refreshes simultáneos
 
   @override
   void initState() {
@@ -40,6 +41,16 @@ class _ForumPageState extends State<ForumPage> with TickerProviderStateMixin {
       _updateStars();
     });
     _initializeData();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Solo refrescar si no estamos refrescando actualmente
+    if (!_isRefreshingPosts) {
+      debugPrint('🔄 didChangeDependencies: Foro - Refrescando posts...');
+      _fetchForumPosts();
+    }
   }
 
   Future<void> _initializeData() async {
@@ -94,6 +105,7 @@ class _ForumPageState extends State<ForumPage> with TickerProviderStateMixin {
   Future<void> _fetchForumPosts() async {
     setState(() {
       _isLoading = true;
+      _isRefreshingPosts = true;
     });
     try {
       final token = await TokenStorage.getToken();
@@ -117,15 +129,19 @@ class _ForumPageState extends State<ForumPage> with TickerProviderStateMixin {
             _likedPosts[postId] = post['userHasLiked'] ?? false;
           }
           _isLoading = false;
+          _isRefreshingPosts = false;
+          debugPrint('🔄 Foro: Posts refrescados exitosamente');
         });
       } else {
         setState(() {
           _isLoading = false;
+          _isRefreshingPosts = false;
         });
       }
     } catch (e) {
       setState(() {
         _isLoading = false;
+        _isRefreshingPosts = false;
       });
     }
   }
@@ -468,15 +484,32 @@ class _ForumPageState extends State<ForumPage> with TickerProviderStateMixin {
                     itemBuilder: (context, index) {
                       final post = _filteredPosts[index];
                       return GestureDetector(
-                        onTap: () {
+                        onTap: () async {
                           final dream = Dream.fromJson(post);
-                          Navigator.push(
+                          final result = await Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) =>
                                   ForumDreamDetailPage(dream: dream),
                             ),
                           );
+                          // Si se editó o eliminó el sueño en el foro, refrescar la lista
+                          if (result != null && result is Map) {
+                            debugPrint(
+                              '📌 Resultado de ForumDreamDetailPage: $result',
+                            );
+                            debugPrint(
+                              '🔄 Refrescando posts del foro en 500ms...',
+                            );
+                            Future.delayed(const Duration(milliseconds: 500), () {
+                              if (mounted) {
+                                debugPrint(
+                                  '🔄 Ejecutando _fetchForumPosts después de editar',
+                                );
+                                _fetchForumPosts();
+                              }
+                            });
+                          }
                         },
                         child: Center(
                           child: Container(

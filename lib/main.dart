@@ -435,32 +435,65 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                             builder: (context) => DreamDetailPage(dream: dream),
                           ),
                         );
+                        debugPrint('📌 Resultado de DreamDetailPage: $result');
                         if (result != null && result is Map) {
                           if (result['deleted'] == true) {
+                            debugPrint(
+                              '🗑️ Sueño eliminado, removiendo de lista',
+                            );
                             setState(() {
                               _dreams.remove(result['dream']);
                             });
                           } else if (result['edited'] == true &&
                               result['dream'] != null) {
+                            debugPrint(
+                              '✏️ Sueño editado, actualizando lista localmente',
+                            );
                             setState(() {
                               final idx = _dreams.indexWhere(
                                 (d) => d.id == result['dream'].id,
                               );
+                              debugPrint('📍 Índice encontrado: $idx');
                               if (idx != -1) {
                                 _dreams[idx] = result['dream'];
                               }
                             });
                             // Aplicar el mismo patrón de auto-refresh que en creación
-                            debugPrint('Sueño editado, refrescando lista...');
+                            debugPrint(
+                              '🔄 Sueño editado, refrescando lista en 500ms...',
+                            );
                             Future.delayed(const Duration(milliseconds: 500), () {
                               if (mounted) {
                                 debugPrint(
-                                  'Refrescando lista de sueños después de editar...',
+                                  '🔄 Ejecutando _fetchDreams después de editar',
                                 );
                                 _fetchDreams();
                               }
                             });
+                          } else {
+                            // Si solo se regresa sin cambios editados, también refrescar
+                            debugPrint(
+                              '⚠️ Resultado sin edited flag, refrescando igual...',
+                            );
+                            Future.delayed(
+                              const Duration(milliseconds: 500),
+                              () {
+                                if (mounted) {
+                                  _fetchDreams();
+                                }
+                              },
+                            );
                           }
+                        } else {
+                          // Si result es null, también refrescar
+                          debugPrint(
+                            '⚠️ Resultado es null, refrescando igual...',
+                          );
+                          Future.delayed(const Duration(milliseconds: 500), () {
+                            if (mounted) {
+                              _fetchDreams();
+                            }
+                          });
                         }
                       },
                       child: Center(
