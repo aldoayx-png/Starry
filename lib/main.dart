@@ -450,6 +450,16 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                                 _dreams[idx] = result['dream'];
                               }
                             });
+                            // Aplicar el mismo patrón de auto-refresh que en creación
+                            debugPrint('Sueño editado, refrescando lista...');
+                            Future.delayed(const Duration(milliseconds: 500), () {
+                              if (mounted) {
+                                debugPrint(
+                                  'Refrescando lista de sueños después de editar...',
+                                );
+                                _fetchDreams();
+                              }
+                            });
                           }
                         }
                       },
