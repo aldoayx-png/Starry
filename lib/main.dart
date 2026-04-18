@@ -747,8 +747,8 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                               }
 
                               if (mounted) {
-                                debugPrint('Cerrando dialog con dialogContext');
-                                Navigator.of(dialogContext).pop();
+                                debugPrint('Cerrando dialog con maybePop');
+                                Navigator.maybePop(dialogContext);
                               }
                             } else if (response.statusCode == 401) {
                               debugPrint('Error 401: ${response.body}');
@@ -756,9 +756,9 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                               // No redirigir al login, cerrar el dialog
                               if (mounted) {
                                 debugPrint(
-                                  'Cerrando dialog (401) con dialogContext',
+                                  'Cerrando dialog (401) con maybePop',
                                 );
-                                Navigator.of(dialogContext).pop();
+                                Navigator.maybePop(dialogContext);
                               }
                             } else {
                               // Manejar error de guardado
