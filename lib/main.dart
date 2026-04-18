@@ -750,6 +750,8 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                               if (mounted && dialogContext.mounted) {
                                 debugPrint('Cerrando dialog con pop');
                                 Navigator.of(dialogContext).pop();
+                                // Refrescar lista de sueños después de guardar
+                                _fetchDreams();
                               }
                             } else if (response.statusCode == 401) {
                               debugPrint('Error 401: ${response.body}');
@@ -758,6 +760,8 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                               if (mounted && dialogContext.mounted) {
                                 debugPrint('Cerrando dialog (401) con pop');
                                 Navigator.of(dialogContext).pop();
+                                // Refrescar lista de sueños aunque haya error de token
+                                _fetchDreams();
                               }
                             } else {
                               // Manejar error de guardado
