@@ -676,10 +676,8 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                             }
 
                             if (mounted) {
-                              debugPrint(
-                                'Cerrando dialog con Navigator de dialogContext',
-                              );
-                              Navigator.of(dialogContext).pop();
+                              debugPrint('Cerrando dialog');
+                              Navigator.of(homeContext).pop();
                               debugPrint('Dialog cerrado correctamente');
                               // El sueño se creó correctamente, no necesita refrescar
                               // La lista se actualizará cuando vuelva a entrar a home
@@ -690,7 +688,7 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                             // No redirigir al login, cerrar el dialog
                             if (mounted) {
                               debugPrint('Cerrando dialog (401)');
-                              Navigator.of(dialogContext).pop();
+                              Navigator.of(homeContext).pop();
                               // El sueño se creó, no necesita refrescar
                             }
                           } else {
