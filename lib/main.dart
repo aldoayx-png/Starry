@@ -647,6 +647,7 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                 onPressed: () {
                   showDialog(
                     context: context,
+                    barrierDismissible: false,
                     builder: (dialogContext) {
                       return DreamFormDialog(
                         onSave: (dream) async {
@@ -746,19 +747,17 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                                 }
                               }
 
-                              if (mounted) {
-                                debugPrint('Cerrando dialog con maybePop');
-                                Navigator.maybePop(dialogContext);
+                              if (mounted && dialogContext.mounted) {
+                                debugPrint('Cerrando dialog con pop');
+                                Navigator.of(dialogContext).pop();
                               }
                             } else if (response.statusCode == 401) {
                               debugPrint('Error 401: ${response.body}');
                               // Token inválido pero el sueño se creó de todas formas
                               // No redirigir al login, cerrar el dialog
-                              if (mounted) {
-                                debugPrint(
-                                  'Cerrando dialog (401) con maybePop',
-                                );
-                                Navigator.maybePop(dialogContext);
+                              if (mounted && dialogContext.mounted) {
+                                debugPrint('Cerrando dialog (401) con pop');
+                                Navigator.of(dialogContext).pop();
                               }
                             } else {
                               // Manejar error de guardado
