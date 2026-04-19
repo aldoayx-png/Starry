@@ -46,6 +46,12 @@ class _ForumDreamDetailPageState extends State<ForumDreamDetailPage>
 
   Future<void> _fetchDreamData() async {
     try {
+      // Solo intentar cargar si el sueño tiene un ID válido
+      if (widget.dream.id == null || widget.dream.id!.isEmpty) {
+        debugPrint('⚠️ Dream ID inválido, usando datos locales');
+        return;
+      }
+
       final response = await http.get(
         Uri.parse(
           'https://starry-1zm8.onrender.com/api/forum/posts/by-dream/${widget.dream.id}',
@@ -59,14 +65,17 @@ class _ForumDreamDetailPageState extends State<ForumDreamDetailPage>
           _comments = _dream.comments;
         });
       } else if (response.statusCode == 404) {
-        // El post fue eliminado
+        // El post no existe (sueño no compartido o eliminado)
+        debugPrint(
+          '📌 Post del foro no encontrado para dreamId: ${widget.dream.id}',
+        );
         setState(() {
           _dreamDeleted = true;
         });
       }
     } catch (e) {
       // Error al cargar, usar datos locales
-      debugPrint('Error cargando post del foro: $e');
+      debugPrint('❌ Error cargando post del foro: $e');
     }
   }
 
