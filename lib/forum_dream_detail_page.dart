@@ -46,7 +46,13 @@ class _ForumDreamDetailPageState extends State<ForumDreamDetailPage>
 
   Future<void> _fetchDreamData() async {
     try {
-      // Solo intentar cargar si el sueño tiene un ID válido
+      // Solo intentar cargar si el sueño fue compartido en el foro
+      if (!widget.dream.isShared) {
+        debugPrint('ℹ️ Sueño no compartido en el foro, usando datos locales');
+        return;
+      }
+
+      // Verificar que el ID sea válido
       if (widget.dream.id == null || widget.dream.id!.isEmpty) {
         debugPrint('⚠️ Dream ID inválido, usando datos locales');
         return;
@@ -64,18 +70,21 @@ class _ForumDreamDetailPageState extends State<ForumDreamDetailPage>
           _dream = Dream.fromJson(json);
           _comments = _dream.comments;
         });
+        debugPrint('✅ Post del foro cargado para dreamId: ${widget.dream.id}');
       } else if (response.statusCode == 404) {
-        // El post no existe (sueño no compartido o eliminado)
+        // El post fue eliminado después de ser compartido
         debugPrint(
-          '📌 Post del foro no encontrado para dreamId: ${widget.dream.id}',
+          '📌 Post del foro eliminado para dreamId: ${widget.dream.id}',
         );
         setState(() {
           _dreamDeleted = true;
         });
+      } else {
+        debugPrint('❌ Error ${response.statusCode} al cargar post del foro');
       }
     } catch (e) {
       // Error al cargar, usar datos locales
-      debugPrint('❌ Error cargando post del foro: $e');
+      debugPrint('❌ Excepción cargando post del foro: $e');
     }
   }
 
