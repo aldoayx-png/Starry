@@ -7,6 +7,7 @@ import 'calendar_page.dart';
 import 'token_storage.dart';
 import 'main.dart';
 import 'forum_dream_detail_page.dart';
+import 'dream_notifier.dart';
 
 class ForumPage extends StatefulWidget {
   const ForumPage({super.key});
@@ -40,7 +41,16 @@ class _ForumPageState extends State<ForumPage> with TickerProviderStateMixin {
     _controller.addListener(() {
       _updateStars();
     });
+    // Escuchar cambios en sueños para refrescar el foro
+    dreamChangeNotifier.addListener(_onDreamChanged);
     _initializeData();
+  }
+
+  void _onDreamChanged() {
+    debugPrint(
+      '🔔 ForumPage: Notificación de cambio en sueños - Refrescando posts',
+    );
+    _fetchForumPosts();
   }
 
   @override
@@ -395,8 +405,10 @@ class _ForumPageState extends State<ForumPage> with TickerProviderStateMixin {
   }
 
   @override
+  @override
   void dispose() {
     _controller.dispose();
+    dreamChangeNotifier.removeListener(_onDreamChanged);
     super.dispose();
   }
 

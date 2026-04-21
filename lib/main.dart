@@ -13,6 +13,7 @@ import 'forum_page.dart';
 import 'user_profile_page.dart';
 import 'users_page.dart';
 import 'settings_page.dart';
+import 'dream_notifier.dart';
 
 void main() {
   runApp(const MyApp());
@@ -808,6 +809,9 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                                     debugPrint(
                                       'Error al compartir en foro: $errorMsg',
                                     );
+                                  } else {
+                                    // Notificar que un sueño ha sido compartido en el foro
+                                    notifyDreamChange();
                                   }
                                 } catch (e) {
                                   debugPrint('Error al compartir en foro: $e');

@@ -5,6 +5,7 @@ import 'main.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'token_storage.dart';
+import 'dream_notifier.dart';
 
 // Constants
 const String _baseUrl = 'https://starry-1zm8.onrender.com/api/dreams';
@@ -310,6 +311,8 @@ class _DreamDetailPageState extends State<DreamDetailPage>
         }
 
         if (mounted) {
+          // Notificar a otras páginas que un sueño ha sido actualizado
+          notifyDreamChange();
           Navigator.of(context).pop({'edited': true, 'dream': widget.dream});
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -512,6 +515,8 @@ class _DreamDetailPageState extends State<DreamDetailPage>
         }
 
         if (mounted) {
+          // Notificar a otras páginas que un sueño ha sido eliminado
+          notifyDreamChange();
           Navigator.of(context).pop({'deleted': true, 'dream': widget.dream});
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
