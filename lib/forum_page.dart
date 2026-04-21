@@ -27,7 +27,8 @@ class _ForumPageState extends State<ForumPage> with TickerProviderStateMixin {
   final Map<String, bool> _likedPosts = {};
   final Map<String, int> _likeCount = {};
   final Set<String> _processingLikes = {};
-  bool _isRefreshingPosts = false; // Evitar refreshes simultáneos
+  bool _isRefreshingPosts = false;
+  bool _didInitialize = false; // Flag para evitar refresh múltiple en initState
 
   @override
   void initState() {
@@ -41,14 +42,20 @@ class _ForumPageState extends State<ForumPage> with TickerProviderStateMixin {
       _updateStars();
     });
     _initializeData();
+    _didInitialize = true;
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Solo refrescar si no estamos refrescando actualmente
-    if (!_isRefreshingPosts) {
-      debugPrint('🔄 didChangeDependencies: Foro - Refrescando posts...');
+    // Solo refrescar si ya hemos inicializado (para evitar refresh doble en startup)
+    if (_didInitialize && !_isRefreshingPosts) {
+      debugPrint(
+        '🔄 didChangeDependencies: Foro - Refrescando posts desde retorno...',
+      );
+      // Limpiar caché local para asegurar datos frescos
+      _likedPosts.clear();
+      _likeCount.clear();
       _fetchForumPosts();
     }
   }
@@ -527,30 +534,14 @@ class _ForumPageState extends State<ForumPage> with TickerProviderStateMixin {
                       return GestureDetector(
                         onTap: () async {
                           final dream = Dream.fromJson(post);
-                          final result = await Navigator.push(
+                          await Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) =>
                                   ForumDreamDetailPage(dream: dream),
                             ),
                           );
-                          // Si se editó o eliminó el sueño en el foro, refrescar la lista
-                          if (result != null && result is Map) {
-                            debugPrint(
-                              '📌 Resultado de ForumDreamDetailPage: $result',
-                            );
-                            debugPrint(
-                              '🔄 Refrescando posts del foro en 500ms...',
-                            );
-                            Future.delayed(const Duration(milliseconds: 500), () {
-                              if (mounted) {
-                                debugPrint(
-                                  '🔄 Ejecutando _fetchForumPosts después de editar',
-                                );
-                                _fetchForumPosts();
-                              }
-                            });
-                          }
+                          // didChangeDependencies se encargará de refrescar automáticamente
                         },
                         child: Center(
                           child: Container(
