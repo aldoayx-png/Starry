@@ -412,7 +412,6 @@ class _ForumPageState extends State<ForumPage> with TickerProviderStateMixin {
   }
 
   @override
-  @override
   void dispose() {
     _controller.dispose();
     dreamChangeNotifier.removeListener(_onDreamChanged);
