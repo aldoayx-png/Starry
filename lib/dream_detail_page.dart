@@ -93,35 +93,36 @@ class _DreamDetailPageState extends State<DreamDetailPage>
             if (widget.dream.date != null)
               _DreamInfoChip(
                 icon: Icons.calendar_today,
-                label: widget.dream.date!.toLocal().toString().split(' ')[0],
-                color: Colors.deepPurple.shade700,
+                label:
+                    '${widget.dream.date!.day.toString().padLeft(2, '0')}/${widget.dream.date!.month.toString().padLeft(2, '0')}/${widget.dream.date!.year.toString().substring(2)}',
+                color: Colors.purpleAccent,
               ),
             if (widget.dream.people != null && widget.dream.people!.isNotEmpty)
               _DreamInfoChip(
                 icon: Icons.people,
                 label: widget.dream.people!,
-                color: Colors.indigo.shade700,
+                color: Colors.cyanAccent,
               ),
             if (widget.dream.place != null && widget.dream.place!.isNotEmpty)
               _DreamInfoChip(
                 icon: Icons.location_on,
                 label: widget.dream.place!,
-                color: Colors.red.shade700,
+                color: Colors.redAccent,
               ),
             _DreamInfoChip(
               icon: Icons.visibility,
               label: widget.dream.clarity.round().toString(),
-              color: const Color(0xFF10B981),
+              color: Colors.greenAccent,
             ),
             _DreamInfoChip(
               icon: Icons.repeat,
               label: widget.dream.isRecurring ? 'Recurrente' : 'Única',
-              color: Colors.purple.shade900,
+              color: Colors.pinkAccent,
             ),
             _DreamInfoChip(
               icon: Icons.alarm,
               label: widget.dream.wokeUp ? 'Despertó' : 'Continuó',
-              color: Colors.indigo.shade900,
+              color: Colors.lightBlueAccent,
             ),
             ...widget.dream.tags.map(
               (tag) => _DreamInfoChip(

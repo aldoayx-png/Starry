@@ -353,6 +353,47 @@ class _ForumPageState extends State<ForumPage> with TickerProviderStateMixin {
     );
   }
 
+  Widget _buildDreamCard({
+    required IconData icon,
+    required String label,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [color, color.withValues(alpha: 0.7)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.4),
+            blurRadius: 12,
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.white, size: 16),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _controller.dispose();
@@ -585,7 +626,7 @@ class _ForumPageState extends State<ForumPage> with TickerProviderStateMixin {
                             ),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 Row(
                                   children: [
@@ -660,117 +701,92 @@ class _ForumPageState extends State<ForumPage> with TickerProviderStateMixin {
                                   ],
                                 ),
                                 const SizedBox(height: 18),
-                                Wrap(
-                                  spacing: 8,
-                                  runSpacing: 4,
+                                Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
-                                    if (post['mood'] != null)
-                                      Chip(
-                                        label: Text(post['mood'] ?? ''),
-                                        backgroundColor: Colors.blue.shade700,
-                                        labelStyle: const TextStyle(
-                                          color: Colors.white,
-                                        ),
-                                        avatar: const Icon(
-                                          Icons.emoji_emotions,
-                                          color: Colors.white,
-                                          size: 18,
-                                        ),
-                                      ),
-                                    if (post['date'] != null)
-                                      Chip(
-                                        label: Text(
-                                          DateTime.parse(
-                                            post['date'],
-                                          ).toLocal().toString().split(' ')[0],
-                                        ),
-                                        backgroundColor:
-                                            Colors.deepPurple.shade700,
-                                        labelStyle: const TextStyle(
-                                          color: Colors.white,
-                                        ),
-                                        avatar: const Icon(
-                                          Icons.calendar_today,
-                                          color: Colors.white,
-                                          size: 18,
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  spacing: 32,
-                                  children: [
-                                    Opacity(
-                                      opacity:
-                                          _processingLikes.contains(post['_id'])
-                                          ? 0.5
-                                          : 1.0,
-                                      child: GestureDetector(
-                                        onTap:
-                                            _processingLikes.contains(
-                                              post['_id'],
-                                            )
-                                            ? null
-                                            : () {
-                                                final postId =
-                                                    post['_id'] ?? 'unknown';
-                                                final isCurrentlyLiked =
-                                                    _likedPosts[postId] ??
-                                                    false;
-                                                setState(() {
-                                                  _likedPosts[postId] =
-                                                      !(_likedPosts[postId] ??
-                                                          false);
-                                                });
-                                                _toggleLike(
-                                                  postId,
-                                                  isCurrentlyLiked,
-                                                );
-                                              },
-                                        child: Column(
-                                          children: [
-                                            SizedBox(
-                                              width: 30,
-                                              height: 30,
-                                              child: CustomPaint(
-                                                painter: CrescentMoonPainter(
-                                                  isLiked:
-                                                      _likedPosts[post['_id'] ??
-                                                          'unknown'] ??
-                                                      false,
-                                                ),
-                                              ),
-                                            ),
-                                            const SizedBox(height: 8),
-                                            Text(
-                                              '${_likeCount[post['_id'] ?? 'unknown'] ?? 0}',
-                                              style: const TextStyle(
-                                                color: Colors.white70,
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                    Column(
+                                    // Centro: Ánimo y Fecha
+                                    Wrap(
+                                      spacing: 8,
+                                      runSpacing: 8,
+                                      alignment: WrapAlignment.center,
                                       children: [
-                                        Icon(
-                                          Icons.comment_outlined,
-                                          color: Colors.white70,
-                                          size: 24,
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          '${(post['comments'] as List?)?.length ?? 0}',
-                                          style: const TextStyle(
-                                            color: Colors.white70,
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w500,
+                                        if (post['mood'] != null)
+                                          _buildDreamCard(
+                                            icon: Icons.emoji_emotions,
+                                            label: post['mood'] ?? '',
+                                            color: _getMoodColor(
+                                              post['mood'] ?? '',
+                                            ),
                                           ),
+                                        if (post['date'] != null)
+                                          _buildDreamCard(
+                                            icon: Icons.calendar_today,
+                                            label: () {
+                                              final d = DateTime.parse(
+                                                post['date'],
+                                              ).toLocal();
+                                              return '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year.toString().substring(2)}';
+                                            }(),
+                                            color: Colors.purpleAccent,
+                                          ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 12),
+                                    // Abajo: Likes y Comentarios
+                                    Wrap(
+                                      spacing: 8,
+                                      runSpacing: 8,
+                                      alignment: WrapAlignment.center,
+                                      children: [
+                                        GestureDetector(
+                                          onTap:
+                                              _processingLikes.contains(
+                                                post['_id'],
+                                              )
+                                              ? null
+                                              : () {
+                                                  final postId =
+                                                      post['_id'] ?? 'unknown';
+                                                  final isCurrentlyLiked =
+                                                      _likedPosts[postId] ??
+                                                      false;
+                                                  setState(() {
+                                                    _likedPosts[postId] =
+                                                        !(_likedPosts[postId] ??
+                                                            false);
+                                                  });
+                                                  _toggleLike(
+                                                    postId,
+                                                    isCurrentlyLiked,
+                                                  );
+                                                },
+                                          child: Opacity(
+                                            opacity:
+                                                _processingLikes.contains(
+                                                  post['_id'],
+                                                )
+                                                ? 0.5
+                                                : 1.0,
+                                            child: _buildDreamCard(
+                                              icon: Icons.nightlight_round,
+                                              label:
+                                                  '${_likeCount[post['_id'] ?? 'unknown'] ?? 0}',
+                                              color:
+                                                  (_likeCount[post['_id'] ??
+                                                              'unknown'] ??
+                                                          0) >
+                                                      0
+                                                  ? Colors.deepPurpleAccent
+                                                  : Colors.grey,
+                                            ),
+                                          ),
+                                        ),
+                                        _buildDreamCard(
+                                          icon: Icons.comment_outlined,
+                                          label:
+                                              '${(post['comments'] as List?)?.length ?? 0}',
+                                          color: Colors.cyanAccent,
                                         ),
                                       ],
                                     ),
@@ -944,6 +960,23 @@ class _ForumPageState extends State<ForumPage> with TickerProviderStateMixin {
         ),
       ),
     );
+  }
+
+  Color _getMoodColor(String moodType) {
+    switch (moodType) {
+      case 'Feliz':
+        return Colors.greenAccent;
+      case 'Triste':
+        return Colors.blueAccent;
+      case 'Ansioso':
+        return Colors.orangeAccent;
+      case 'Asustado':
+        return Colors.redAccent;
+      case 'Neutral':
+        return Colors.grey;
+      default:
+        return Colors.white24;
+    }
   }
 }
 

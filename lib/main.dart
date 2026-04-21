@@ -318,6 +318,47 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
     });
   }
 
+  Widget _buildDreamCard({
+    required IconData icon,
+    required String label,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [color, color.withValues(alpha: 0.7)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.4),
+            blurRadius: 12,
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.white, size: 16),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   void dispose() {
     debugPrint('🗑️ dispose: DreamJournalHome siendo destruido');
@@ -565,7 +606,7 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                           padding: const EdgeInsets.all(24),
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Row(
                                 children: [
@@ -622,38 +663,21 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                               const SizedBox(height: 18),
                               Wrap(
                                 spacing: 8,
-                                runSpacing: 4,
+                                runSpacing: 8,
+                                alignment: WrapAlignment.center,
                                 children: [
                                   if (dream.mood != null)
-                                    Chip(
-                                      label: Text(dream.mood ?? ''),
-                                      backgroundColor: Colors.blue.shade700,
-                                      labelStyle: const TextStyle(
-                                        color: Colors.white,
-                                      ),
-                                      avatar: const Icon(
-                                        Icons.emoji_emotions,
-                                        color: Colors.white,
-                                        size: 18,
-                                      ),
+                                    _buildDreamCard(
+                                      icon: Icons.emoji_emotions,
+                                      label: dream.mood ?? '',
+                                      color: _getMoodColor(dream.mood ?? ''),
                                     ),
                                   if (dream.date != null)
-                                    Chip(
-                                      label: Text(
-                                        dream.date!.toLocal().toString().split(
-                                          ' ',
-                                        )[0],
-                                      ),
-                                      backgroundColor:
-                                          Colors.deepPurple.shade700,
-                                      labelStyle: const TextStyle(
-                                        color: Colors.white,
-                                      ),
-                                      avatar: const Icon(
-                                        Icons.calendar_today,
-                                        color: Colors.white,
-                                        size: 18,
-                                      ),
+                                    _buildDreamCard(
+                                      icon: Icons.calendar_today,
+                                      label:
+                                          '${dream.date!.day.toString().padLeft(2, '0')}/${dream.date!.month.toString().padLeft(2, '0')}/${dream.date!.year.toString().substring(2)}',
+                                      color: Colors.purpleAccent,
                                     ),
                                 ],
                               ),
@@ -1193,6 +1217,23 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
         ),
       ),
     );
+  }
+
+  Color _getMoodColor(String moodType) {
+    switch (moodType) {
+      case 'Feliz':
+        return Colors.greenAccent;
+      case 'Triste':
+        return Colors.blueAccent;
+      case 'Ansioso':
+        return Colors.orangeAccent;
+      case 'Asustado':
+        return Colors.redAccent;
+      case 'Neutral':
+        return Colors.grey;
+      default:
+        return Colors.white24;
+    }
   }
 }
 

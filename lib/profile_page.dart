@@ -709,27 +709,34 @@ class _ProfilePageState extends State<ProfilePage>
   }
 
   Widget _buildTagCard(String tag, int count) {
+    final color = _getTagColor(tag);
+    final icon = _getTagIcon(tag);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         gradient: LinearGradient(
-          colors: [
-            const Color(0xFF2193b0).withValues(alpha: 0.2),
-            const Color(0xFF8e2de2).withValues(alpha: 0.2),
-          ],
+          colors: [color, color.withValues(alpha: 0.7)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        border: Border.all(
-          color: const Color(0xFF2193b0).withValues(alpha: 0.5),
-          width: 1,
-        ),
+        border: Border.all(color: color, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.4),
+            blurRadius: 12,
+            spreadRadius: 0,
+          ),
+        ],
       ),
       child: Column(
         children: [
+          Icon(icon, color: Colors.white, size: 20),
+          const SizedBox(height: 6),
           Text(
             tag,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.87),
+            style: const TextStyle(
+              color: Colors.white,
               fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
@@ -746,6 +753,48 @@ class _ProfilePageState extends State<ProfilePage>
         ],
       ),
     );
+  }
+
+  IconData _getTagIcon(String tag) {
+    switch (tag) {
+      case 'Lúcido':
+        return Icons.lightbulb;
+      case 'Pesadilla':
+        return Icons.warning;
+      case 'Recurrente':
+        return Icons.repeat;
+      case 'Normal':
+        return Icons.nightlight_round;
+      case 'Colorido':
+        return Icons.palette;
+      case 'Corto':
+        return Icons.timer;
+      case 'Largo':
+        return Icons.hourglass_bottom;
+      default:
+        return Icons.label;
+    }
+  }
+
+  Color _getTagColor(String tag) {
+    switch (tag) {
+      case 'Lúcido':
+        return Colors.amber.shade400;
+      case 'Pesadilla':
+        return Colors.redAccent;
+      case 'Recurrente':
+        return Colors.deepPurpleAccent;
+      case 'Normal':
+        return Colors.indigoAccent;
+      case 'Colorido':
+        return Colors.pinkAccent;
+      case 'Corto':
+        return Colors.cyanAccent;
+      case 'Largo':
+        return Colors.lightBlueAccent;
+      default:
+        return Colors.purpleAccent;
+    }
   }
 
   Widget _buildWeeklyMood() {

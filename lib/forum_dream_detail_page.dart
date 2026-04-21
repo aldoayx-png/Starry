@@ -382,35 +382,36 @@ class _ForumDreamDetailPageState extends State<ForumDreamDetailPage>
             if (_dream.date != null)
               _DreamInfoChip(
                 icon: Icons.calendar_today,
-                label: _dream.date!.toLocal().toString().split(' ')[0],
-                color: Colors.deepPurple.shade700,
+                label:
+                    '${_dream.date!.day.toString().padLeft(2, '0')}/${_dream.date!.month.toString().padLeft(2, '0')}/${_dream.date!.year.toString().substring(2)}',
+                color: Colors.purpleAccent,
               ),
             if (_dream.people != null && _dream.people!.isNotEmpty)
               _DreamInfoChip(
                 icon: Icons.people,
                 label: _dream.people!,
-                color: Colors.indigo.shade700,
+                color: Colors.cyanAccent,
               ),
             if (_dream.place != null && _dream.place!.isNotEmpty)
               _DreamInfoChip(
                 icon: Icons.location_on,
                 label: _dream.place!,
-                color: Colors.red.shade700,
+                color: Colors.redAccent,
               ),
             _DreamInfoChip(
               icon: Icons.visibility,
               label: _dream.clarity.round().toString(),
-              color: const Color(0xFF10B981),
+              color: Colors.greenAccent,
             ),
             _DreamInfoChip(
               icon: Icons.repeat,
               label: _dream.isRecurring ? 'Recurrente' : 'Única',
-              color: Colors.purple.shade900,
+              color: Colors.pinkAccent,
             ),
             _DreamInfoChip(
               icon: Icons.alarm,
               label: _dream.wokeUp ? 'Despertó' : 'Continuó',
-              color: Colors.indigo.shade900,
+              color: Colors.lightBlueAccent,
             ),
             ..._dream.tags.map(
               (tag) => _DreamInfoChip(
@@ -697,45 +698,6 @@ class _ForumDreamDetailPageState extends State<ForumDreamDetailPage>
       ),
       body: Stack(
         children: [
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Color.fromARGB(
-                      77,
-                      (Colors.deepPurple.shade900.r * 255.0).round().clamp(
-                        0,
-                        255,
-                      ),
-                      (Colors.deepPurple.shade900.g * 255.0).round().clamp(
-                        0,
-                        255,
-                      ),
-                      (Colors.deepPurple.shade900.b * 255.0).round().clamp(
-                        0,
-                        255,
-                      ),
-                    ),
-                    Color.fromARGB(
-                      77,
-                      (Colors.blue.shade900.r * 255.0).round().clamp(0, 255),
-                      (Colors.blue.shade900.g * 255.0).round().clamp(0, 255),
-                      (Colors.blue.shade900.b * 255.0).round().clamp(0, 255),
-                    ),
-                    Color.fromARGB(
-                      26,
-                      (Colors.black.r * 255.0).round().clamp(0, 255),
-                      (Colors.black.g * 255.0).round().clamp(0, 255),
-                      (Colors.black.b * 255.0).round().clamp(0, 255),
-                    ),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-            ),
-          ),
           CustomPaint(
             size: size,
             painter: StarBackgroundPainter(stars: _stars, repaint: _controller),
@@ -1207,7 +1169,8 @@ class _ForumDreamDetailPageState extends State<ForumDreamDetailPage>
     } else if (difference.inDays < 7) {
       return 'hace ${difference.inDays} d';
     } else {
-      return date.toLocal().toString().split(' ')[0];
+      final d = date.toLocal();
+      return '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year.toString().substring(2)}';
     }
   }
 }
