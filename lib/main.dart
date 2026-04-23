@@ -1493,8 +1493,9 @@ class _DreamFormDialogState extends State<DreamFormDialog> {
                             ),
                           ),
                           initialValue: title ?? '',
-                          onSaved: (value) => title = value,
-                          validator: (value) => value == null || value.isEmpty
+                          onSaved: (value) => title = value?.trim() ?? '',
+                          validator: (value) =>
+                              value == null || value.trim().isEmpty
                               ? 'Ingrese un título'
                               : null,
                         ),
@@ -1826,7 +1827,9 @@ class _DreamFormDialogState extends State<DreamFormDialog> {
                             ),
                           ),
                           initialValue: people ?? '',
-                          onSaved: (value) => people = value,
+                          onSaved: (value) => people = value?.trim() == ''
+                              ? null
+                              : value?.trim(),
                         ),
                         const SizedBox(height: 16),
                         Text(
@@ -1873,7 +1876,9 @@ class _DreamFormDialogState extends State<DreamFormDialog> {
                             ),
                           ),
                           initialValue: place ?? '',
-                          onSaved: (value) => place = value,
+                          onSaved: (value) => place = value?.trim() == ''
+                              ? null
+                              : value?.trim(),
                         ),
                         const SizedBox(height: 16),
                         Text(
@@ -2082,10 +2087,15 @@ class _DreamFormDialogState extends State<DreamFormDialog> {
                             ),
                           ),
                           initialValue: dreamInfo ?? '',
-                          onSaved: (value) => dreamInfo = value,
-                          validator: (value) => value == null || value.isEmpty
-                              ? 'Ingrese la información del sueño'
-                              : null,
+                          onSaved: (value) => dreamInfo = value?.trim() ?? '',
+                          validator: (value) {
+                            // Solo validar si está compartiendo
+                            if (isShared &&
+                                (value == null || value.trim().isEmpty)) {
+                              return 'La descripción es requerida para compartir';
+                            }
+                            return null;
+                          },
                         ),
                       ],
                     ),
