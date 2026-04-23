@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:async';
 import 'dart:math';
 import 'dart:convert';
 import 'dart:ui';
@@ -33,14 +32,11 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      initialRoute: '/splash',
+      initialRoute: '/login',
       navigatorObservers: [_NavigatorObserver()],
       onGenerateRoute: (settings) {
         Widget page;
         switch (settings.name) {
-          case '/splash':
-            page = const SplashPage();
-            break;
           case '/login':
             page = const LoginPage();
             break;
@@ -110,79 +106,6 @@ class MyApp extends StatelessWidget {
           transitionDuration: const Duration(milliseconds: 700),
         );
       },
-    );
-  }
-}
-
-class SplashPage extends StatefulWidget {
-  const SplashPage({super.key});
-
-  @override
-  State<SplashPage> createState() => _SplashPageState();
-}
-
-class _SplashPageState extends State<SplashPage>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _fadeAnimation;
-  late final Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    );
-    _fadeAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    );
-    _scaleAnimation = Tween<double>(begin: 0.92, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-    );
-    _controller.forward();
-    _goNext();
-  }
-
-  Future<void> _goNext() async {
-    await Future.delayed(const Duration(seconds: 2));
-    if (!mounted) return;
-    Navigator.of(context).pushReplacementNamed('/login');
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF000000), Color(0xFF120525), Color(0xFF000000)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: Center(
-          child: FadeTransition(
-            opacity: _fadeAnimation,
-            child: ScaleTransition(
-              scale: _scaleAnimation,
-              child: Image.asset(
-                'assets/icono.png',
-                width: 120,
-                height: 120,
-              ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }
