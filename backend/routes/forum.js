@@ -151,8 +151,6 @@ router.put('/posts/:id', auth, async (req, res) => {
     res.status(400).json({ error: 'Error al actualizar el post', details: err.message });
   }
 });
-});
-});
 
 // Eliminar un post por dreamId (DEBE estar ANTES de /posts/:id para que Express lo matchee correctamente)
 router.delete('/posts/by-dream/:dreamId', auth, async (req, res) => {
@@ -363,53 +361,6 @@ router.put('/dreams/:dreamId', auth, async (req, res) => {
       details: err.message,
       dreamId: req.params.dreamId
     });
-  }
-});
-
-// Obtener post del foro por dreamId
-// Sincronizar cambios de sueña a post del foro (cuando se edita un sueño compartido)
-router.put('/dreams/:dreamId', auth, async (req, res) => {
-  try {
-    console.log('🔧 PUT /dreams/:dreamId recibido para dreamId:', req.params.dreamId);
-    console.log('Auth userId:', req.userId);
-    
-    // Buscar el post por dreamId
-    const post = await ForumPost.findOne({ dreamId: req.params.dreamId });
-    
-    if (!post) {
-      console.log('❌ Post del foro no encontrado con dreamId:', req.params.dreamId);
-      return res.status(404).json({ error: 'Post del foro no encontrado' });
-    }
-
-    // Verificar que el usuario es el propietario del post
-    if (post.userId.toString() !== req.userId) {
-      console.log('❌ No autorizado. Post owner:', post.userId, 'Request userId:', req.userId);
-      return res.status(403).json({ error: 'No autorizado para actualizar este post' });
-    }
-
-    // Actualizar solo los campos permitidos
-    const allowedFields = ['title', 'date', 'mood', 'tags', 'people', 'place', 'clarity', 'notes', 'isRecurring', 'wokeUp', 'dreamInfo'];
-    const updateData = {};
-    
-    for (const field of allowedFields) {
-      if (req.body.hasOwnProperty(field)) {
-        updateData[field] = req.body[field];
-      }
-    }
-
-    console.log('📝 Actualizando post con datos:', Object.keys(updateData));
-
-    const updatedPost = await ForumPost.findByIdAndUpdate(
-      post._id,
-      updateData,
-      { returnDocument: 'after' }
-    ).populate('userId', 'username');
-
-    console.log('✅ Post sincronizado exitosamente:', updatedPost._id);
-    res.json(updatedPost);
-  } catch (err) {
-    console.error('❌ Error al sincronizar Dream -> ForumPost:', err);
-    res.status(400).json({ error: 'Error al sincronizar el post del foro', details: err.message });
   }
 });
 
