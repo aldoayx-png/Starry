@@ -52,20 +52,27 @@ class _ForumPageState extends State<ForumPage> with TickerProviderStateMixin {
     debugPrint(
       '🔔 ForumPage: Notificación de cambio en sueños - Refrescando posts',
     );
+    // Limpiar caché para asegurar datos frescos
+    _likedPosts.clear();
+    _likeCount.clear();
+    // Refrescar inmediatamente los posts del foro
     _fetchForumPosts();
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Solo refrescar si ya hemos inicializado (para evitar refresh doble en startup)
-    if (_didInitialize && !_isRefreshingPosts) {
+    // Refrescar cada vez que se vuelve a esta página desde otra
+    // (excepto en el primer load o si ya estamos refrescando)
+    if (_didInitialize) {
       debugPrint(
         '🔄 didChangeDependencies: Foro - Refrescando posts desde retorno...',
       );
       // Limpiar caché local para asegurar datos frescos
       _likedPosts.clear();
       _likeCount.clear();
+      // Forzar refresh sin importar _isRefreshingPosts
+      // para asegurar que los cambios se reflejen
       _fetchForumPosts();
     }
   }
@@ -123,6 +130,11 @@ class _ForumPageState extends State<ForumPage> with TickerProviderStateMixin {
     setState(() {
       _isLoading = true;
       _isRefreshingPosts = true;
+      // Limpiar datos anteriores para forzar un refresh limpio
+      _forumPosts = [];
+      _filteredPosts = [];
+      _likedPosts.clear();
+      _likeCount.clear();
     });
     try {
       final token = await TokenStorage.getToken();
@@ -147,7 +159,9 @@ class _ForumPageState extends State<ForumPage> with TickerProviderStateMixin {
           }
           _isLoading = false;
           _isRefreshingPosts = false;
-          debugPrint('🔄 Foro: Posts refrescados exitosamente');
+          debugPrint(
+            '🔄 Foro: Posts refrescados exitosamente (${data.length} posts)',
+          );
         });
       } else {
         setState(() {
@@ -160,6 +174,7 @@ class _ForumPageState extends State<ForumPage> with TickerProviderStateMixin {
         _isLoading = false;
         _isRefreshingPosts = false;
       });
+      debugPrint('❌ Error fetching forum posts: $e');
     }
   }
 
