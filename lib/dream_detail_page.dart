@@ -275,6 +275,26 @@ class _DreamDetailPageState extends State<DreamDetailPage>
         // Si el sueño es compartido, actualizar también el post del foro
         if (updatedDream.isShared && widget.dream.id != null) {
           try {
+            debugPrint('🔄 Enviando actualización al foro:');
+            debugPrint('   - title: ${updatedDream.title}');
+            debugPrint('   - mood: ${updatedDream.mood}');
+            debugPrint('   - tags: ${updatedDream.tags}');
+            debugPrint('   - date: ${updatedDream.date?.toIso8601String()}');
+
+            final updateBody = {
+              'title': updatedDream.title,
+              'date': updatedDream.date?.toIso8601String(),
+              'mood': updatedDream.mood,
+              'tags': updatedDream.tags,
+              'people': updatedDream.people,
+              'place': updatedDream.place,
+              'clarity': updatedDream.clarity,
+              'notes': updatedDream.notes,
+              'isRecurring': updatedDream.isRecurring,
+              'wokeUp': updatedDream.wokeUp,
+              'dreamInfo': updatedDream.dreamInfo,
+            };
+
             final forumResponse = await http.put(
               Uri.parse(
                 'https://starry-1zm8.onrender.com/api/forum/posts/by-dream/${widget.dream.id}',
@@ -283,30 +303,21 @@ class _DreamDetailPageState extends State<DreamDetailPage>
                 'Content-Type': 'application/json',
                 if (token != null) 'Authorization': 'Bearer $token',
               },
-              body: jsonEncode({
-                'title': updatedDream.title,
-                'date': updatedDream.date?.toIso8601String(),
-                'mood': updatedDream.mood,
-                'tags': updatedDream.tags,
-                'people': updatedDream.people,
-                'place': updatedDream.place,
-                'clarity': updatedDream.clarity,
-                'notes': updatedDream.notes,
-                'isRecurring': updatedDream.isRecurring,
-                'wokeUp': updatedDream.wokeUp,
-                'dreamInfo': updatedDream.dreamInfo,
-              }),
+              body: jsonEncode(updateBody),
             );
 
+            debugPrint('📤 Respuesta del foro: ${forumResponse.statusCode}');
             if (forumResponse.statusCode != 200) {
               // Log but don't fail the whole update
               debugPrint(
-                'Error actualizando foro: ${forumResponse.statusCode}',
+                'Error actualizando foro: ${forumResponse.statusCode} - ${forumResponse.body}',
               );
+            } else {
+              debugPrint('✓ Post del foro actualizado correctamente');
             }
           } catch (e) {
             // Error al actualizar el post del foro, pero continuamos
-            debugPrint('Error de conexión actualizando foro: $e');
+            debugPrint('❌ Error de conexión actualizando foro: $e');
           }
         }
 

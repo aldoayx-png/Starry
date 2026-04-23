@@ -27,10 +27,10 @@ router.get('/posts', optionalAuth, async (req, res) => {
   }
 });
 
-// Obtener un post específico
-router.get('/posts/:id', async (req, res) => {
+// Obtener un post por dreamId (DEBE estar ANTES de /posts/:id para que Express lo matchee correctamente)
+router.get('/posts/by-dream/:dreamId', async (req, res) => {
   try {
-    const post = await ForumPost.findById(req.params.id)
+    const post = await ForumPost.findOne({ dreamId: req.params.dreamId })
       .populate('userId', 'username')
       .populate('comments.userId', 'username');
     if (!post) return res.status(404).json({ error: 'Post no encontrado' });
@@ -40,10 +40,10 @@ router.get('/posts/:id', async (req, res) => {
   }
 });
 
-// Obtener un post por dreamId (DEBE estar ANTES de /posts/:id para que Express lo matchee correctamente)
-router.get('/posts/by-dream/:dreamId', async (req, res) => {
+// Obtener un post específico (DEBE estar DESPUÉS de /posts/by-dream/:dreamId)
+router.get('/posts/:id', async (req, res) => {
   try {
-    const post = await ForumPost.findOne({ dreamId: req.params.dreamId })
+    const post = await ForumPost.findById(req.params.id)
       .populate('userId', 'username')
       .populate('comments.userId', 'username');
     if (!post) return res.status(404).json({ error: 'Post no encontrado' });
@@ -83,12 +83,39 @@ router.put('/posts/by-dream/:dreamId', auth, async (req, res) => {
     const post = await ForumPost.findOne({ dreamId: req.params.dreamId });
     if (!post) return res.status(404).json({ error: 'Post no encontrado' });
     if (post.userId.toString() !== req.userId) return res.status(403).json({ error: 'No autorizado' });
-    const updatedPost = await ForumPost.findByIdAndUpdate(post._id, req.body, { returnDocument: 'after' })
-      .populate('userId', 'username')
-      .populate('comments.userId', 'username');
+    
+    console.log('🔄 Actualizando post del foro:', { dreamId: req.params.dreamId, updateData: req.body });
+    
+    // Actualizar con los datos recibidos
+    const updatedPost = await ForumPost.findByIdAndUpdate(
+      post._id, 
+      {
+        title: req.body.title !== undefined ? req.body.title : post.title,
+        date: req.body.date !== undefined ? req.body.date : post.date,
+        mood: req.body.mood !== undefined ? req.body.mood : post.mood,
+        tags: req.body.tags !== undefined ? req.body.tags : post.tags,
+        people: req.body.people !== undefined ? req.body.people : post.people,
+        place: req.body.place !== undefined ? req.body.place : post.place,
+        clarity: req.body.clarity !== undefined ? req.body.clarity : post.clarity,
+        notes: req.body.notes !== undefined ? req.body.notes : post.notes,
+        isRecurring: req.body.isRecurring !== undefined ? req.body.isRecurring : post.isRecurring,
+        wokeUp: req.body.wokeUp !== undefined ? req.body.wokeUp : post.wokeUp,
+        dreamInfo: req.body.dreamInfo !== undefined ? req.body.dreamInfo : post.dreamInfo,
+      },
+      { returnDocument: 'after', runValidators: false }
+    ).populate('userId', 'username')
+     .populate('comments.userId', 'username');
+    
+    console.log('✓ Post del foro actualizado:', { 
+      postId: updatedPost._id, 
+      title: updatedPost.title,
+      mood: updatedPost.mood,
+    });
+    
     res.json(updatedPost);
   } catch (err) {
-    res.status(400).json({ error: 'Error al actualizar el post' });
+    console.error('Error al actualizar post del foro:', err);
+    res.status(400).json({ error: 'Error al actualizar el post', details: err.message });
   }
 });
 
@@ -98,11 +125,33 @@ router.put('/posts/:id', auth, async (req, res) => {
     const post = await ForumPost.findById(req.params.id);
     if (!post) return res.status(404).json({ error: 'Post no encontrado' });
     if (post.userId.toString() !== req.userId) return res.status(403).json({ error: 'No autorizado' });
-    const updatedPost = await ForumPost.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' });
+    
+    console.log('🔄 Actualizando post directo:', { postId: req.params.id, updateData: req.body });
+    
+    const updatedPost = await ForumPost.findByIdAndUpdate(
+      req.params.id,
+      {
+        title: req.body.title !== undefined ? req.body.title : post.title,
+        date: req.body.date !== undefined ? req.body.date : post.date,
+        mood: req.body.mood !== undefined ? req.body.mood : post.mood,
+        tags: req.body.tags !== undefined ? req.body.tags : post.tags,
+        people: req.body.people !== undefined ? req.body.people : post.people,
+        place: req.body.place !== undefined ? req.body.place : post.place,
+        clarity: req.body.clarity !== undefined ? req.body.clarity : post.clarity,
+        notes: req.body.notes !== undefined ? req.body.notes : post.notes,
+        isRecurring: req.body.isRecurring !== undefined ? req.body.isRecurring : post.isRecurring,
+        wokeUp: req.body.wokeUp !== undefined ? req.body.wokeUp : post.wokeUp,
+        dreamInfo: req.body.dreamInfo !== undefined ? req.body.dreamInfo : post.dreamInfo,
+      },
+      { returnDocument: 'after', runValidators: false }
+    );
     res.json(updatedPost);
   } catch (err) {
-    res.status(400).json({ error: 'Error al actualizar el post' });
+    console.error('Error al actualizar post:', err);
+    res.status(400).json({ error: 'Error al actualizar el post', details: err.message });
   }
+});
+});
 });
 
 // Eliminar un post por dreamId (DEBE estar ANTES de /posts/:id para que Express lo matchee correctamente)
