@@ -211,12 +211,7 @@ class _DreamDetailPageState extends State<DreamDetailPage>
   Future<void> _handleEditDream() async {
     final editedDream = await showDialog<Dream>(
       context: context,
-      builder: (context) => DreamFormDialog(
-        initialDream: widget.dream,
-        onSave: (dream) {
-          Navigator.of(context).pop(dream);
-        },
-      ),
+      builder: (context) => DreamFormDialog(initialDream: widget.dream),
     );
 
     if (editedDream != null) {
@@ -234,6 +229,8 @@ class _DreamDetailPageState extends State<DreamDetailPage>
   Future<void> _updateDreamOnBackend(Dream editedDream) async {
     try {
       final token = await TokenStorage.getToken();
+      final wasShared = widget.dream.isShared;
+      final shouldBeShared = editedDream.isShared;
       final response = await http.put(
         Uri.parse('$_baseUrl/${widget.dream.id}'),
         headers: {
@@ -252,6 +249,7 @@ class _DreamDetailPageState extends State<DreamDetailPage>
           'isRecurring': editedDream.isRecurring,
           'wokeUp': editedDream.wokeUp,
           'dreamInfo': editedDream.dreamInfo,
+          'isShared': editedDream.isShared,
         }),
       );
 
@@ -269,55 +267,96 @@ class _DreamDetailPageState extends State<DreamDetailPage>
           widget.dream.isRecurring = updatedDream.isRecurring;
           widget.dream.wokeUp = updatedDream.wokeUp;
           widget.dream.dreamInfo = updatedDream.dreamInfo;
-          widget.dream.isShared = updatedDream.isShared;
+          // Reflejar lo que el usuario eligió en el formulario.
+          widget.dream.isShared = shouldBeShared;
         });
 
-        // Si el sueño es compartido, actualizar también el post del foro
-        if (updatedDream.isShared && widget.dream.id != null) {
-          try {
-            debugPrint('🔄 Enviando actualización al foro:');
-            debugPrint('   - title: ${updatedDream.title}');
-            debugPrint('   - mood: ${updatedDream.mood}');
-            debugPrint('   - tags: ${updatedDream.tags}');
-            debugPrint('   - date: ${updatedDream.date?.toIso8601String()}');
+        // Sincronizar con el foro según el toggle de "Compartir"
+        if (widget.dream.id != null) {
+          final postBody = {
+            'dreamId': widget.dream.id,
+            'title': updatedDream.title,
+            'date': updatedDream.date?.toIso8601String(),
+            'mood': updatedDream.mood,
+            'tags': updatedDream.tags,
+            'people': updatedDream.people,
+            'place': updatedDream.place,
+            'clarity': updatedDream.clarity,
+            'notes': updatedDream.notes,
+            'isRecurring': updatedDream.isRecurring,
+            'wokeUp': updatedDream.wokeUp,
+            'dreamInfo': updatedDream.dreamInfo,
+          };
 
-            final updateBody = {
-              'title': updatedDream.title,
-              'date': updatedDream.date?.toIso8601String(),
-              'mood': updatedDream.mood,
-              'tags': updatedDream.tags,
-              'people': updatedDream.people,
-              'place': updatedDream.place,
-              'clarity': updatedDream.clarity,
-              'notes': updatedDream.notes,
-              'isRecurring': updatedDream.isRecurring,
-              'wokeUp': updatedDream.wokeUp,
-              'dreamInfo': updatedDream.dreamInfo,
-            };
-
-            final forumResponse = await http.put(
-              Uri.parse(
-                'https://starry-1zm8.onrender.com/api/forum/posts/by-dream/${widget.dream.id}',
-              ),
-              headers: {
-                'Content-Type': 'application/json',
-                if (token != null) 'Authorization': 'Bearer $token',
-              },
-              body: jsonEncode(updateBody),
-            );
-
-            debugPrint('📤 Respuesta del foro: ${forumResponse.statusCode}');
-            if (forumResponse.statusCode != 200) {
-              // Log but don't fail the whole update
-              debugPrint(
-                'Error actualizando foro: ${forumResponse.statusCode} - ${forumResponse.body}',
+          if (!shouldBeShared) {
+            // Descompartir: siempre intentar borrar (aunque no exista).
+            try {
+              final forumDeleteResponse = await http.delete(
+                Uri.parse(
+                  'https://starry-1zm8.onrender.com/api/forum/posts/by-dream/${widget.dream.id}',
+                ),
+                headers: {
+                  'Content-Type': 'application/json',
+                  if (token != null) 'Authorization': 'Bearer $token',
+                },
               );
-            } else {
-              debugPrint('✓ Post del foro actualizado correctamente');
+              debugPrint(
+                '📤 Foro delete status=${forumDeleteResponse.statusCode} body=${forumDeleteResponse.body}',
+              );
+            } catch (e) {
+              debugPrint('❌ Error de conexión eliminando del foro: $e');
             }
-          } catch (e) {
-            // Error al actualizar el post del foro, pero continuamos
-            debugPrint('❌ Error de conexión actualizando foro: $e');
+          } else {
+            // Compartir/seguir compartiendo: si se acaba de activar, intentar crear primero.
+            try {
+              if (!wasShared) {
+                final forumCreateResponse = await http.post(
+                  Uri.parse('https://starry-1zm8.onrender.com/api/forum/posts'),
+                  headers: {
+                    'Content-Type': 'application/json',
+                    if (token != null) 'Authorization': 'Bearer $token',
+                  },
+                  body: jsonEncode(postBody),
+                );
+                debugPrint(
+                  '📤 Foro create status=${forumCreateResponse.statusCode} body=${forumCreateResponse.body}',
+                );
+                if (forumCreateResponse.statusCode == 201 ||
+                    forumCreateResponse.statusCode == 200) {
+                  // ok
+                } else {
+                  final forumUpdateResponse = await http.put(
+                    Uri.parse(
+                      'https://starry-1zm8.onrender.com/api/forum/posts/by-dream/${widget.dream.id}',
+                    ),
+                    headers: {
+                      'Content-Type': 'application/json',
+                      if (token != null) 'Authorization': 'Bearer $token',
+                    },
+                    body: jsonEncode(postBody),
+                  );
+                  debugPrint(
+                    '📤 Foro update status=${forumUpdateResponse.statusCode} body=${forumUpdateResponse.body}',
+                  );
+                }
+              } else {
+                final forumUpdateResponse = await http.put(
+                  Uri.parse(
+                    'https://starry-1zm8.onrender.com/api/forum/posts/by-dream/${widget.dream.id}',
+                  ),
+                  headers: {
+                    'Content-Type': 'application/json',
+                    if (token != null) 'Authorization': 'Bearer $token',
+                  },
+                  body: jsonEncode(postBody),
+                );
+                debugPrint(
+                  '📤 Foro update status=${forumUpdateResponse.statusCode} body=${forumUpdateResponse.body}',
+                );
+              }
+            } catch (e) {
+              debugPrint('❌ Error de conexión sincronizando foro: $e');
+            }
           }
         }
 

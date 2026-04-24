@@ -789,188 +789,119 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
                 ),
               ),
               child: FloatingActionButton(
-                onPressed: () {
-                  showDialog(
+                onPressed: () async {
+                  final dream = await showDialog<Dream>(
                     context: context,
                     barrierDismissible: false,
-                    builder: (dialogContext) {
-                      return DreamFormDialog(
-                        onSave: (dream) async {
-                          debugPrint('=== INICIO: Guardar sueño ===');
-                          try {
-                            final token = await TokenStorage.getToken();
-                            debugPrint(
-                              'TOKEN: ${token != null ? "Existe" : "NO existe"}',
-                            );
-                            if (!mounted) {
-                              debugPrint('Widget no mounted, saliendo');
-                              return;
-                            }
-
-                            debugPrint('Enviando POST a /dreams...');
-                            final response = await http.post(
-                              Uri.parse(
-                                'https://starry-1zm8.onrender.com/api/dreams',
-                              ),
-                              headers: {
-                                'Content-Type': 'application/json',
-                                if (token != null)
-                                  'Authorization': 'Bearer $token',
-                              },
-                              body: jsonEncode({
-                                'title': dream.title,
-                                'date': dream.date?.toIso8601String(),
-                                'mood': dream.mood,
-                                'tags': dream.tags,
-                                'people': dream.people,
-                                'place': dream.place,
-                                'clarity': dream.clarity,
-                                'notes': dream.notes,
-                                'isRecurring': dream.isRecurring,
-                                'wokeUp': dream.wokeUp,
-                                'dreamInfo': dream.dreamInfo,
-                                'isShared': dream.isShared,
-                              }),
-                            );
-                            debugPrint('Respuesta: ${response.statusCode}');
-                            if (!mounted) {
-                              debugPrint(
-                                'Widget no mounted después de POST, saliendo',
-                              );
-                              return;
-                            }
-
-                            if (response.statusCode == 201) {
-                              debugPrint('Sueño creado (201)');
-                              // Sueño creado correctamente
-                              final createdDream = Dream.fromJson(
-                                jsonDecode(response.body),
-                              );
-
-                              // Si está marcado para compartir en el foro, guardar también en el foro
-                              if (dream.isShared && createdDream.id != null) {
-                                debugPrint('Compartiendo en foro...');
-                                try {
-                                  final forumResponse = await http.post(
-                                    Uri.parse(
-                                      'https://starry-1zm8.onrender.com/api/forum/posts',
-                                    ),
-                                    headers: {
-                                      'Content-Type': 'application/json',
-                                      if (token != null)
-                                        'Authorization': 'Bearer $token',
-                                    },
-                                    body: jsonEncode({
-                                      'dreamId': createdDream.id,
-                                      'title': dream.title,
-                                      'date': dream.date?.toIso8601String(),
-                                      'mood': dream.mood,
-                                      'tags': dream.tags,
-                                      'people': dream.people,
-                                      'place': dream.place,
-                                      'clarity': dream.clarity,
-                                      'notes': dream.notes,
-                                      'isRecurring': dream.isRecurring,
-                                      'wokeUp': dream.wokeUp,
-                                      'dreamInfo': dream.dreamInfo,
-                                    }),
-                                  );
-                                  debugPrint(
-                                    'Respuesta del foro: ${forumResponse.statusCode}',
-                                  );
-
-                                  if (forumResponse.statusCode != 201 &&
-                                      forumResponse.statusCode != 200) {
-                                    final errorMsg =
-                                        'Error ${forumResponse.statusCode}: ${forumResponse.body}';
-                                    debugPrint(
-                                      'Error al compartir en foro: $errorMsg',
-                                    );
-                                  } else {
-                                    // Notificar que un sueño ha sido compartido en el foro
-                                    notifyDreamChange();
-                                  }
-                                } catch (e) {
-                                  debugPrint('Error al compartir en foro: $e');
-                                }
-                              }
-
-                              debugPrint('Cerrando dialog con pop');
-                              // Usar Future.microtask para asegurar que el pop ocurra de forma segura
-                              Future.microtask(() {
-                                try {
-                                  if (mounted && dialogContext.mounted) {
-                                    Navigator.of(dialogContext).pop();
-                                  }
-                                } catch (e) {
-                                  debugPrint('Error al cerrar dialog: $e');
-                                }
-                              });
-                              // Refrescar lista de sueños con un pequeño delay
-                              Future.delayed(
-                                const Duration(milliseconds: 500),
-                                () {
-                                  if (mounted) {
-                                    debugPrint(
-                                      'Refrescando lista de sueños...',
-                                    );
-                                    _fetchDreams();
-                                  }
-                                },
-                              );
-                            } else if (response.statusCode == 401) {
-                              debugPrint('Error 401: ${response.body}');
-                              debugPrint('Cerrando dialog (401) con pop');
-                              Future.microtask(() {
-                                try {
-                                  if (mounted && dialogContext.mounted) {
-                                    Navigator.of(dialogContext).pop();
-                                  }
-                                } catch (e) {
-                                  debugPrint('Error al cerrar dialog: $e');
-                                }
-                              });
-                              // Refrescar lista de sueños con un pequeño delay
-                              Future.delayed(
-                                const Duration(milliseconds: 500),
-                                () {
-                                  if (mounted) {
-                                    debugPrint(
-                                      'Refrescando lista de sueños...',
-                                    );
-                                    _fetchDreams();
-                                  }
-                                },
-                              );
-                            } else {
-                              // Manejar error de guardado
-                              debugPrint(
-                                'Error ${response.statusCode} al crear sueño: ${response.body}',
-                              );
-                              if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      'Error al guardar: ${response.statusCode}',
-                                    ),
-                                  ),
-                                );
-                              }
-                            }
-                          } catch (e) {
-                            debugPrint('EXCEPCIÓN: $e');
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Error de conexión'),
-                                ),
-                              );
-                            }
-                          }
-                        },
-                      );
-                    },
+                    builder: (dialogContext) =>
+                        const DreamFormDialog(initialDream: null),
                   );
+
+                  if (dream == null) return;
+
+                  debugPrint('=== INICIO: Guardar sueño ===');
+                  try {
+                    final token = await TokenStorage.getToken();
+                    debugPrint(
+                      'TOKEN: ${token != null ? "Existe" : "NO existe"}',
+                    );
+                    if (!mounted) return;
+
+                    debugPrint('Enviando POST a /dreams...');
+                    final response = await http.post(
+                      Uri.parse('https://starry-1zm8.onrender.com/api/dreams'),
+                      headers: {
+                        'Content-Type': 'application/json',
+                        if (token != null) 'Authorization': 'Bearer $token',
+                      },
+                      body: jsonEncode({
+                        'title': dream.title,
+                        'date': dream.date?.toIso8601String(),
+                        'mood': dream.mood,
+                        'tags': dream.tags,
+                        'people': dream.people,
+                        'place': dream.place,
+                        'clarity': dream.clarity,
+                        'notes': dream.notes,
+                        'isRecurring': dream.isRecurring,
+                        'wokeUp': dream.wokeUp,
+                        'dreamInfo': dream.dreamInfo,
+                        'isShared': dream.isShared,
+                      }),
+                    );
+                    debugPrint('Respuesta: ${response.statusCode}');
+                    if (!mounted) return;
+
+                    if (response.statusCode == 201) {
+                      final createdDream = Dream.fromJson(
+                        jsonDecode(response.body),
+                      );
+
+                      if (dream.isShared && createdDream.id != null) {
+                        debugPrint('Compartiendo en foro...');
+                        try {
+                          final forumResponse = await http.post(
+                            Uri.parse(
+                              'https://starry-1zm8.onrender.com/api/forum/posts',
+                            ),
+                            headers: {
+                              'Content-Type': 'application/json',
+                              if (token != null)
+                                'Authorization': 'Bearer $token',
+                            },
+                            body: jsonEncode({
+                              'dreamId': createdDream.id,
+                              'title': dream.title,
+                              'date': dream.date?.toIso8601String(),
+                              'mood': dream.mood,
+                              'tags': dream.tags,
+                              'people': dream.people,
+                              'place': dream.place,
+                              'clarity': dream.clarity,
+                              'notes': dream.notes,
+                              'isRecurring': dream.isRecurring,
+                              'wokeUp': dream.wokeUp,
+                              'dreamInfo': dream.dreamInfo,
+                            }),
+                          );
+                          debugPrint(
+                            'Respuesta del foro: ${forumResponse.statusCode}',
+                          );
+                          debugPrint('Body foro: ${forumResponse.body}');
+                          if (forumResponse.statusCode == 201 ||
+                              forumResponse.statusCode == 200) {
+                            notifyDreamChange();
+                          }
+                        } catch (e) {
+                          debugPrint('Error al compartir en foro: $e');
+                        }
+                      }
+
+                      Future.delayed(const Duration(milliseconds: 500), () {
+                        if (mounted) _fetchDreams();
+                      });
+                    } else {
+                      debugPrint(
+                        'Error ${response.statusCode} al crear sueño: ${response.body}',
+                      );
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Error al guardar: ${response.statusCode}',
+                            ),
+                          ),
+                        );
+                      }
+                    }
+                  } catch (e) {
+                    debugPrint('EXCEPCIÓN: $e');
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Error de conexión')),
+                      );
+                    }
+                  }
                 },
                 backgroundColor: Colors.transparent,
                 elevation: 0,
@@ -1319,9 +1250,8 @@ class _DreamJournalHomeState extends State<DreamJournalHome>
 }
 
 class DreamFormDialog extends StatefulWidget {
-  final Function(Dream)? onSave;
   final Dream? initialDream;
-  const DreamFormDialog({super.key, this.onSave, this.initialDream});
+  const DreamFormDialog({super.key, this.initialDream});
 
   @override
   State<DreamFormDialog> createState() => _DreamFormDialogState();
@@ -2220,8 +2150,7 @@ class _DreamFormDialogState extends State<DreamFormDialog> {
                           dreamInfo: dreamInfo,
                           isShared: isShared,
                         );
-                        widget.onSave?.call(dream);
-                        Navigator.of(context).pop();
+                        Navigator.of(context).pop(dream);
                       }
                     },
                     style: ElevatedButton.styleFrom(
