@@ -725,9 +725,23 @@ class _ForumPageState extends State<ForumPage> with TickerProviderStateMixin {
                                           _buildDreamCard(
                                             icon: Icons.calendar_today,
                                             label: () {
-                                              final d = DateTime.parse(
-                                                post['date'],
-                                              ).toLocal();
+                                              final raw =
+                                                  post['date'].toString().trim();
+                                              // Treat as date-only to avoid timezone shifting (off-by-one day).
+                                              final ymd = raw.length >= 10
+                                                  ? raw.substring(0, 10)
+                                                  : raw;
+                                              final parsed =
+                                                  DateTime.tryParse(ymd) ??
+                                                  DateTime.tryParse(raw);
+                                              final d = parsed == null
+                                                  ? null
+                                                  : DateTime(
+                                                      parsed.year,
+                                                      parsed.month,
+                                                      parsed.day,
+                                                    );
+                                              if (d == null) return '';
                                               return '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year.toString().substring(2)}';
                                             }(),
                                             color: Colors.purpleAccent,

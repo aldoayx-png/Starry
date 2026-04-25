@@ -10,7 +10,8 @@ router.get('/posts', optionalAuth, async (req, res) => {
   try {
     let posts = await ForumPost.find()
       .populate('userId', 'username')
-      .sort({ createdAt: -1 });
+      // Order by dream date (newest first). Fallback to creation time.
+      .sort({ date: -1, createdAt: -1 });
 
     // If the user was deleted, `populate` sets `userId` to null. Hide orphaned
     // posts so the forum doesn't show content without an author.
