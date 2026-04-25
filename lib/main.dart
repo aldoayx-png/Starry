@@ -1297,6 +1297,7 @@ class _DreamFormDialogState extends State<DreamFormDialog> {
     return showDialog<DateTime>(
       context: context,
       barrierDismissible: true,
+      barrierColor: Colors.transparent,
       builder: (_) => _NeonCalendarDialog(initialDate: initial),
     );
   }
@@ -2262,7 +2263,12 @@ class _NeonCalendarDialogState extends State<_NeonCalendarDialog> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(22),
-          color: Colors.black.withValues(alpha: 0.75),
+          // Fully opaque background (no translucency).
+          gradient: const LinearGradient(
+            colors: [Color(0xFF12081F), Color(0xFF05020A)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
           border: Border.all(
             color: const Color(0xFF8e2de2).withValues(alpha: 0.7),
             width: 1.5,
