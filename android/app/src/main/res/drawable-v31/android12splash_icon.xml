@@ -1,16 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  Android 12+ splash icon sizing:
-  Inset the existing bitmap so it doesn't render oversized.
--->
-<inset xmlns:android="http://schemas.android.com/apk/res/android"
-    android:insetLeft="140dp"
-    android:insetTop="140dp"
-    android:insetRight="140dp"
-    android:insetBottom="140dp">
-
-    <bitmap
-        android:src="@drawable/android12splash"
-        android:gravity="center" />
-</inset>
+<!-- Android 12+ splash icon sizing: force dp size -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:width="160dp"
+        android:height="160dp"
+        android:gravity="center">
+        <bitmap
+            android:src="@drawable/android12splash"
+            android:gravity="center" />
+    </item>
+</layer-list>
 
