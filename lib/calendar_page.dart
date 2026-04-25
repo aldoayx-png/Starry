@@ -21,6 +21,7 @@ class _CalendarPageState extends State<CalendarPage>
   List<Dream> _allDreams = [];
   DateTime? _selectedDate;
   int _currentIndex = 1;
+  String? _currentUsername;
   late AnimationController _controller;
   late List<Star> _stars;
   Size _lastSize = Size.zero;
@@ -42,7 +43,30 @@ class _CalendarPageState extends State<CalendarPage>
       _currentDate.month,
       _currentDate.day,
     );
+    _fetchCurrentUsername();
     _fetchDreams();
+  }
+
+  Future<void> _fetchCurrentUsername() async {
+    try {
+      final token = await TokenStorage.getToken();
+      final response = await http.get(
+        Uri.parse('https://starry-1zm8.onrender.com/api/profile'),
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (!mounted) return;
+        setState(() {
+          _currentUsername = (data['username'] ?? '').toString();
+        });
+      }
+    } catch (_) {
+      // ignore
+    }
   }
 
   void _initStars(Size size) {
@@ -434,7 +458,7 @@ class _CalendarPageState extends State<CalendarPage>
                                             color: !isCurrentMonth
                                                 ? Colors.transparent
                                                 : isSelected
-                                                ? Colors.deepPurpleAccent
+                                                ? Colors.transparent
                                                 : hasDreams
                                                 ? Colors.deepPurpleAccent
                                                       .withAlpha(80)
@@ -807,9 +831,18 @@ class _CalendarPageState extends State<CalendarPage>
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
-                                    (dream.username ?? '').trim().isEmpty
-                                        ? 'Anónimo'
-                                        : dream.username!.trim(),
+                                    (() {
+                                      final fromDream =
+                                          (dream.username ?? '').trim();
+                                      final fallback =
+                                          (_currentUsername ?? '').trim();
+                                      final resolved = fromDream.isNotEmpty
+                                          ? fromDream
+                                          : fallback;
+                                      return resolved.isEmpty
+                                          ? 'Anónimo'
+                                          : resolved;
+                                    })(),
                                     style: const TextStyle(
                                       color: Colors.white70,
                                       fontWeight: FontWeight.w500,
