@@ -1523,6 +1523,88 @@ class _DreamFormDialogState extends State<DreamFormDialog> {
                               initialDate: date ?? DateTime.now(),
                               firstDate: DateTime(2000),
                               lastDate: DateTime(2100),
+                              builder: (context, child) {
+                                final base = Theme.of(context);
+                                const accent = Color(0xFF8e2de2);
+                                const neon = Color(0xFFB100FF);
+
+                                final scheme = const ColorScheme.dark().copyWith(
+                                  primary: accent,
+                                  secondary: neon,
+                                  surface: const Color(0xFF0B0B12),
+                                  onSurface: Colors.white,
+                                );
+
+                                return Theme(
+                                  data: base.copyWith(
+                                    colorScheme: scheme,
+                                    dialogBackgroundColor:
+                                        const Color(0xFF0B0B12),
+                                    scaffoldBackgroundColor:
+                                        const Color(0xFF0B0B12),
+                                    textTheme: base.textTheme.apply(
+                                      bodyColor: Colors.white,
+                                      displayColor: Colors.white,
+                                    ),
+                                    datePickerTheme: DatePickerThemeData(
+                                      backgroundColor: const Color(0xFF0B0B12),
+                                      headerBackgroundColor:
+                                          const Color(0xFF0B0B12),
+                                      headerForegroundColor: Colors.white,
+                                      dividerColor: Colors.white12,
+                                      dayForegroundColor:
+                                          WidgetStateProperty.resolveWith(
+                                        (states) => Colors.white,
+                                      ),
+                                      dayBackgroundColor:
+                                          WidgetStateProperty.resolveWith(
+                                        (states) {
+                                          if (states.contains(
+                                            WidgetState.selected,
+                                          )) {
+                                            return accent;
+                                          }
+                                          return Colors.transparent;
+                                        },
+                                      ),
+                                      todayForegroundColor:
+                                          const WidgetStatePropertyAll(neon),
+                                      todayBackgroundColor:
+                                          const WidgetStatePropertyAll(
+                                        Colors.transparent,
+                                      ),
+                                      yearForegroundColor:
+                                          const WidgetStatePropertyAll(
+                                        Colors.white,
+                                      ),
+                                      yearBackgroundColor:
+                                          WidgetStateProperty.resolveWith(
+                                        (states) => states.contains(
+                                          WidgetState.selected,
+                                        )
+                                            ? accent
+                                            : Colors.transparent,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(22),
+                                        side: const BorderSide(
+                                          color: accent,
+                                          width: 1.5,
+                                        ),
+                                      ),
+                                    ),
+                                    textButtonTheme: TextButtonThemeData(
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: accent,
+                                        textStyle: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  child: child ?? const SizedBox.shrink(),
+                                );
+                              },
                             );
                             if (picked != null) {
                               setState(() {
