@@ -4,10 +4,10 @@
   Inset the existing bitmap so it doesn't render oversized.
 -->
 <inset xmlns:android="http://schemas.android.com/apk/res/android"
-    android:insetLeft="96dp"
-    android:insetTop="96dp"
-    android:insetRight="96dp"
-    android:insetBottom="96dp">
+    android:insetLeft="140dp"
+    android:insetTop="140dp"
+    android:insetRight="140dp"
+    android:insetBottom="140dp">
 
     <bitmap
         android:src="@drawable/android12splash"
