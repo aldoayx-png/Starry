@@ -70,13 +70,13 @@ flutter_launcher_icons:
 
 flutter_native_splash:
   color: "#120525"
-  image: assets/logo.png
+  image: assets/icono.png
   android: true
   ios: true
   web: false
   android_12:
     color: "#120525"
-    image: assets/logo.png
+    image: assets/icono.png
 
 # An image asset can refer to one or more resolution-specific "variants", see
 # https://flutter.dev/to/resolution-aware-images
