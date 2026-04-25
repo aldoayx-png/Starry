@@ -1291,6 +1291,16 @@ class _DreamFormDialogState extends State<DreamFormDialog> {
     }
   }
 
+  Future<DateTime?> _pickDate(BuildContext context, DateTime? current) {
+    final now = DateTime.now();
+    final initial = current ?? DateTime(now.year, now.month, now.day);
+    return showDialog<DateTime>(
+      context: context,
+      barrierDismissible: true,
+      builder: (_) => _NeonCalendarDialog(initialDate: initial),
+    );
+  }
+
   final List<String> moods = [
     'Feliz',
     'Triste',
@@ -1518,12 +1528,7 @@ class _DreamFormDialogState extends State<DreamFormDialog> {
                         const SizedBox(height: 8),
                         GestureDetector(
                           onTap: () async {
-                            final picked = await showDatePicker(
-                              context: context,
-                              initialDate: date ?? DateTime.now(),
-                              firstDate: DateTime(2000),
-                              lastDate: DateTime(2100),
-                            );
+                            final picked = await _pickDate(context, date);
                             if (picked != null) {
                               setState(() {
                                 date = picked;
@@ -2174,6 +2179,268 @@ class _DreamFormDialogState extends State<DreamFormDialog> {
                   ),
                 ],
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NeonCalendarDialog extends StatefulWidget {
+  final DateTime initialDate;
+  const _NeonCalendarDialog({required this.initialDate});
+
+  @override
+  State<_NeonCalendarDialog> createState() => _NeonCalendarDialogState();
+}
+
+class _NeonCalendarDialogState extends State<_NeonCalendarDialog> {
+  late DateTime _currentMonth;
+  late DateTime _selected;
+
+  @override
+  void initState() {
+    super.initState();
+    _selected = DateTime(
+      widget.initialDate.year,
+      widget.initialDate.month,
+      widget.initialDate.day,
+    );
+    _currentMonth = DateTime(_selected.year, _selected.month, 1);
+  }
+
+  List<DateTime> _getDaysInMonth(DateTime date) {
+    final firstDay = DateTime(date.year, date.month, 1);
+    final lastDay = DateTime(date.year, date.month + 1, 0);
+    final daysInMonth = lastDay.day;
+    final dayOfWeek = firstDay.weekday; // 1..7 (Mon..Sun)
+
+    final days = <DateTime>[];
+    // Convert to Sun-first grid like CalendarPage: add leading blanks.
+    // For Sunday-first, we want 0..6 where Sunday=0. Dart weekday: Mon=1..Sun=7.
+    final sunFirstIndex = dayOfWeek % 7; // Sun=0, Mon=1, ...
+    for (int i = 0; i < sunFirstIndex; i++) {
+      days.add(DateTime(date.year, date.month, 1 - (sunFirstIndex - i)));
+    }
+    for (int i = 1; i <= daysInMonth; i++) {
+      days.add(DateTime(date.year, date.month, i));
+    }
+    while (days.length < 42) {
+      final nextDay = days.length - (sunFirstIndex + daysInMonth) + 1;
+      days.add(DateTime(date.year, date.month + 1, nextDay));
+    }
+    return days;
+  }
+
+  String _monthName(int month) {
+    const months = [
+      'Enero',
+      'Febrero',
+      'Marzo',
+      'Abril',
+      'Mayo',
+      'Junio',
+      'Julio',
+      'Agosto',
+      'Septiembre',
+      'Octubre',
+      'Noviembre',
+      'Diciembre',
+    ];
+    return months[month - 1];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final days = _getDaysInMonth(_currentMonth);
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(22),
+          color: Colors.black.withValues(alpha: 0.75),
+          border: Border.all(
+            color: const Color(0xFF8e2de2).withValues(alpha: 0.7),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFB100FF).withValues(alpha: 0.25),
+              blurRadius: 24,
+              spreadRadius: 0,
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                const Icon(
+                  Icons.calendar_today,
+                  color: Colors.white,
+                  size: 18,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    '${_monthName(_currentMonth.month)} ${_currentMonth.year}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () {
+                    setState(() {
+                      _currentMonth = DateTime(
+                        _currentMonth.year,
+                        _currentMonth.month - 1,
+                        1,
+                      );
+                    });
+                  },
+                  icon: const Icon(Icons.chevron_left, color: Colors.white70),
+                ),
+                IconButton(
+                  onPressed: () {
+                    setState(() {
+                      _currentMonth = DateTime(
+                        _currentMonth.year,
+                        _currentMonth.month + 1,
+                        1,
+                      );
+                    });
+                  },
+                  icon: const Icon(Icons.chevron_right, color: Colors.white70),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: const [
+                'Dom',
+                'Lun',
+                'Mar',
+                'Mié',
+                'Jue',
+                'Vie',
+                'Sáb',
+              ].map(
+                (d) => Text(
+                  d,
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ).toList(),
+            ),
+            const SizedBox(height: 10),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 7,
+                childAspectRatio: 1.2,
+                mainAxisSpacing: 8,
+                crossAxisSpacing: 8,
+              ),
+              itemCount: days.length,
+              itemBuilder: (context, index) {
+                final day = days[index];
+                final isCurrentMonth = day.month == _currentMonth.month;
+                final isSelected =
+                    day.year == _selected.year &&
+                    day.month == _selected.month &&
+                    day.day == _selected.day;
+
+                return GestureDetector(
+                  onTap: isCurrentMonth
+                      ? () {
+                          setState(() {
+                            _selected = DateTime(day.year, day.month, day.day);
+                          });
+                        }
+                      : null,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      gradient: isSelected
+                          ? const LinearGradient(
+                              colors: [Color(0xFFB100FF), Color(0xFF8e2de2)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            )
+                          : null,
+                      color: isSelected
+                          ? null
+                          : isCurrentMonth
+                          ? Colors.white.withValues(alpha: 0.04)
+                          : Colors.transparent,
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: const Color(0xFFB100FF).withAlpha(140),
+                                blurRadius: 16,
+                                spreadRadius: 1,
+                              ),
+                            ]
+                          : null,
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      day.day.toString(),
+                      style: TextStyle(
+                        color: isCurrentMonth ? Colors.white : Colors.white30,
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.normal,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 14),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text(
+                    'Cancelar',
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(_selected),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF8e2de2),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: const Text(
+                    'OK',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
