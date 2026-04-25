@@ -415,8 +415,18 @@ class _CalendarPageState extends State<CalendarPage>
                                           borderRadius: BorderRadius.circular(
                                             12,
                                           ),
+                                          gradient: isSelected
+                                              ? const LinearGradient(
+                                                  colors: [
+                                                    Color(0xFFB100FF),
+                                                    Color(0xFF8e2de2),
+                                                  ],
+                                                  begin: Alignment.topLeft,
+                                                  end: Alignment.bottomRight,
+                                                )
+                                              : null,
                                           color: isSelected
-                                              ? Colors.deepPurple.shade700
+                                              ? null
                                               : isCurrentMonth
                                               ? Colors.white.withAlpha(5)
                                               : Colors.transparent,
@@ -431,6 +441,17 @@ class _CalendarPageState extends State<CalendarPage>
                                                 : Colors.transparent,
                                             width: 1.5,
                                           ),
+                                          boxShadow: isSelected
+                                              ? [
+                                                  BoxShadow(
+                                                    color: const Color(
+                                                      0xFFB100FF,
+                                                    ).withAlpha(140),
+                                                    blurRadius: 16,
+                                                    spreadRadius: 1,
+                                                  ),
+                                                ]
+                                              : null,
                                         ),
                                         child: Stack(
                                           alignment: Alignment.center,
@@ -781,15 +802,34 @@ class _CalendarPageState extends State<CalendarPage>
                             ),
                             const SizedBox(width: 18),
                             Expanded(
-                              child: Text(
-                                dream.title ?? '',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                  letterSpacing: 1.1,
-                                ),
-                                overflow: TextOverflow.ellipsis,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    (dream.username ?? '').trim().isEmpty
+                                        ? 'Anónimo'
+                                        : dream.username!.trim(),
+                                    style: const TextStyle(
+                                      color: Colors.white70,
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 12,
+                                      letterSpacing: 0.5,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    dream.title ?? '',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                      letterSpacing: 1.1,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
                               ),
                             ),
                           ],
