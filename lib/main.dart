@@ -1555,9 +1555,7 @@ class _DreamFormDialogState extends State<DreamFormDialog> {
                                   child: Text(
                                     date == null
                                         ? 'Seleccionar fecha'
-                                        : date!.toLocal().toString().split(
-                                            ' ',
-                                          )[0],
+                                        : date!.toString().split(' ')[0],
                                     style: TextStyle(
                                       color: date == null
                                           ? Colors.white54
@@ -2221,6 +2219,32 @@ class Dream {
     this.comments = const [],
   });
 
+  static DateTime? _parseDateOnly(dynamic value) {
+    if (value == null) return null;
+    final raw = value.toString().trim();
+    if (raw.isEmpty) return null;
+
+    // Backend typically returns ISO-8601 with timezone (e.g. ...Z). Since this
+    // app treats `date` as a date-only field, we parse YYYY-MM-DD and keep it
+    // as a local DateTime to avoid timezone shifting (off-by-one day).
+    if (raw.length >= 10) {
+      final ymd = raw.substring(0, 10);
+      final parts = ymd.split('-');
+      if (parts.length == 3) {
+        final y = int.tryParse(parts[0]);
+        final m = int.tryParse(parts[1]);
+        final d = int.tryParse(parts[2]);
+        if (y != null && m != null && d != null) {
+          return DateTime(y, m, d);
+        }
+      }
+    }
+
+    final parsed = DateTime.tryParse(raw);
+    if (parsed == null) return null;
+    return DateTime(parsed.year, parsed.month, parsed.day);
+  }
+
   factory Dream.fromJson(Map<String, dynamic> json) {
     return Dream(
       id: json['_id'] ?? json['id'],
@@ -2231,7 +2255,7 @@ class Dream {
           ? (json['userId'] as Map)['username']
           : json['username'],
       title: json['title'],
-      date: json['date'] != null ? DateTime.tryParse(json['date']) : null,
+      date: _parseDateOnly(json['date']),
       mood: json['mood'],
       tags: (json['tags'] as List?)?.map((e) => e.toString()).toList() ?? [],
       people: json['people'],

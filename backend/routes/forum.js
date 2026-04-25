@@ -11,6 +11,10 @@ router.get('/posts', optionalAuth, async (req, res) => {
     let posts = await ForumPost.find()
       .populate('userId', 'username')
       .sort({ createdAt: -1 });
+
+    // If the user was deleted, `populate` sets `userId` to null. Hide orphaned
+    // posts so the forum doesn't show content without an author.
+    posts = posts.filter((post) => post.userId);
     
     // Si hay autenticación, agregar flag de si el usuario actual ha likeado
     if (req.userId) {
@@ -34,6 +38,7 @@ router.get('/posts/by-dream/:dreamId', async (req, res) => {
       .populate('userId', 'username')
       .populate('comments.userId', 'username');
     if (!post) return res.status(404).json({ error: 'Post no encontrado' });
+    if (!post.userId) return res.status(404).json({ error: 'Post no encontrado' });
     res.json(post);
   } catch (err) {
     res.status(500).json({ error: 'Error al obtener el post' });
@@ -47,6 +52,7 @@ router.get('/posts/:id', async (req, res) => {
       .populate('userId', 'username')
       .populate('comments.userId', 'username');
     if (!post) return res.status(404).json({ error: 'Post no encontrado' });
+    if (!post.userId) return res.status(404).json({ error: 'Post no encontrado' });
     res.json(post);
   } catch (err) {
     res.status(500).json({ error: 'Error al obtener el post' });

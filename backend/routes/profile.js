@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 const User = require('../models/User');
 const Dream = require('../models/Dream');
+const ForumPost = require('../models/ForumPost');
 const VerificationToken = require('../models/VerificationToken');
 const auth = require('../middleware/auth');
 const router = express.Router();
@@ -268,6 +269,23 @@ router.delete('/', auth, async (req, res) => {
 
     // Eliminar todos los sueños del usuario
     await Dream.deleteMany({ userId: req.userId });
+
+    // Eliminar posts del foro del usuario y limpiar interacciones
+    // - posts authored by user
+    await ForumPost.deleteMany({ userId: req.userId });
+    // - remove user's likes and recompute like counts
+    await ForumPost.updateMany(
+      { likedBy: req.userId },
+      [
+        { $set: { likedBy: { $setDifference: ['$likedBy', [req.userId]] } } },
+        { $set: { likes: { $size: '$likedBy' } } },
+      ]
+    );
+    // - remove user's comments from other posts
+    await ForumPost.updateMany(
+      { 'comments.userId': req.userId },
+      { $pull: { comments: { userId: req.userId } } }
+    );
 
     // Eliminar el usuario
     await User.findByIdAndDelete(req.userId);
