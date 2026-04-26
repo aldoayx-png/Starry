@@ -148,7 +148,9 @@ class _SplashPageState extends State<SplashPage>
   Future<void> _goNext() async {
     await Future.delayed(const Duration(seconds: 2));
     if (!mounted) return;
-    Navigator.of(context).pushReplacementNamed('/login');
+    final token = await TokenStorage.getToken();
+    final hasSession = token != null && token.isNotEmpty;
+    Navigator.of(context).pushReplacementNamed(hasSession ? '/home' : '/login');
   }
 
   @override
