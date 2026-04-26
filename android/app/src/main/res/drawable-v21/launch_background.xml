@@ -9,6 +9,6 @@
         android:width="90dp"
         android:height="90dp"
         android:gravity="center">
-        <bitmap android:gravity="center" android:src="@drawable/splash"/>
+        <bitmap android:gravity="center" android:src="@drawable/ic_launcher_foreground"/>
     </item>
 </layer-list>
