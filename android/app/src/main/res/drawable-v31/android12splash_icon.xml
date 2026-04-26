@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Android 12+ splash icon sizing: force dp size -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:width="160dp"
-        android:height="160dp"
+        android:width="48dp"
+        android:height="48dp"
         android:gravity="center">
         <bitmap
             android:src="@drawable/android12splash"
