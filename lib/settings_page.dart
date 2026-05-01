@@ -771,11 +771,12 @@ class _SettingsPageState extends State<SettingsPage>
   }
 
   Future<void> _showConfirmDeleteAccountDialog() async {
+    final rootContext = context;
     final passwordController = TextEditingController();
 
     showDialog(
       context: context,
-      builder: (context) => Dialog(
+      builder: (dialogContext) => Dialog(
         backgroundColor: Colors.transparent,
         insetPadding: const EdgeInsets.symmetric(horizontal: 16),
         child: Container(
@@ -919,8 +920,12 @@ class _SettingsPageState extends State<SettingsPage>
                     ),
                     ElevatedButton(
                       onPressed: () async {
+                        final messenger = ScaffoldMessenger.of(rootContext);
+                        final rootNavigator = Navigator.of(rootContext);
+                        final dialogNavigator = Navigator.of(dialogContext);
+
                         if (passwordController.text.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          messenger.showSnackBar(
                             const SnackBar(
                               content: Text('Debes ingresar tu contraseña'),
                               backgroundColor: Colors.red,
@@ -931,53 +936,68 @@ class _SettingsPageState extends State<SettingsPage>
 
                         try {
                           final token = await TokenStorage.getToken();
+                          if (token == null || token.isEmpty) {
+                            messenger.showSnackBar(
+                              const SnackBar(
+                                content: Text('Sesión expirada. Inicia sesión de nuevo.'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
+                          }
                           final response = await http.delete(
                             Uri.parse(
                               'https://starry-1zm8.onrender.com/api/profile',
                             ),
                             headers: {
                               'Content-Type': 'application/json',
-                              if (token != null)
-                                'Authorization': 'Bearer $token',
+                              'Authorization': 'Bearer $token',
                             },
                             body: jsonEncode({
                               'password': passwordController.text,
                             }),
                           );
 
+                          if (!mounted) return;
+
                           if (response.statusCode == 200) {
                             await TokenStorage.clearToken();
-                            if (mounted) {
-                              Navigator.of(context).pushNamedAndRemoveUntil(
-                                '/login',
-                                (route) => false,
-                              );
-                            }
+                            if (!mounted) return;
+                            dialogNavigator.pop(); // close dialog
+                            rootNavigator.pushNamedAndRemoveUntil(
+                              '/login',
+                              (route) => false,
+                            );
                           } else {
-                            final errorData = jsonDecode(response.body);
-                            if (mounted) {
-                              Navigator.pop(context);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    errorData['error'] ??
-                                        'Error al eliminar la cuenta',
-                                  ),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
+                            dialogNavigator.pop();
+
+                            String message = 'Error al eliminar la cuenta';
+                            try {
+                              final errorData = jsonDecode(response.body);
+                              if (errorData is Map &&
+                                  errorData['error'] is String) {
+                                message = errorData['error'] as String;
+                              }
+                            } catch (_) {
+                              // Non-JSON body; keep default message
                             }
-                          }
-                        } catch (e) {
-                          if (mounted) {
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Error al eliminar la cuenta'),
+
+                            messenger.showSnackBar(
+                              SnackBar(
+                                content: Text(message),
                                 backgroundColor: Colors.red,
                               ),
                             );
                           }
+                        } catch (e) {
+                          if (!mounted) return;
+                          dialogNavigator.pop();
+                          messenger.showSnackBar(
+                            const SnackBar(
+                              content: Text('Error al eliminar la cuenta'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
                         }
                       },
                       style: ElevatedButton.styleFrom(
