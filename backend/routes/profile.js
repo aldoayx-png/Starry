@@ -273,13 +273,15 @@ router.delete('/', auth, async (req, res) => {
     // Eliminar posts del foro del usuario y limpiar interacciones
     // - posts authored by user
     await ForumPost.deleteMany({ userId: req.userId });
-    // - remove user's likes and recompute like counts
+    // - remove user's likes
+    // NOTE: Avoid aggregation pipeline updates here (can fail depending on Mongo version/provider).
+    // We can safely decrement likes by 1 because a user can only like once.
     await ForumPost.updateMany(
       { likedBy: req.userId },
-      [
-        { $set: { likedBy: { $setDifference: ['$likedBy', [req.userId]] } } },
-        { $set: { likes: { $size: '$likedBy' } } },
-      ]
+      {
+        $pull: { likedBy: req.userId },
+        $inc: { likes: -1 },
+      }
     );
     // - remove user's comments from other posts
     await ForumPost.updateMany(
